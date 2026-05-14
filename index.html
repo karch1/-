@@ -200,24 +200,39 @@
 
 <div class="calendar-container">
     <header class="flex justify-between items-center mb-6 px-2">
-        <div>
-            <h1 id="monthDisplay"
-                class="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
-                불러오는 중...
-            </h1>
-        </div>
+    <header class="flex justify-between items-center mb-6 px-2">
 
-        <div class="flex gap-2">
-            <button id="prevMonth"
-                    class="bg-white border-2 border-gray-100 p-2 px-5 rounded-2xl font-bold shadow-sm active:bg-gray-50 text-gray-700">
-                이전
-            </button>
+    <div>
+        <h1 id="monthDisplay"
+            class="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
+            불러오는 중...
+        </h1>
+    </div>
 
-            <button id="nextMonth"
-                    class="bg-white border-2 border-gray-100 p-2 px-5 rounded-2xl font-bold shadow-sm active:bg-gray-50 text-gray-700">
-                다음
-            </button>
-        </div>
+    <div class="flex gap-2 items-center">
+
+        <button onclick="loginGoogle()"
+                class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold">
+            로그인
+        </button>
+
+        <button onclick="logoutGoogle()"
+                class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold">
+            로그아웃
+        </button>
+
+        <button id="prevMonth"
+                class="bg-white border-2 border-gray-100 p-2 px-5 rounded-2xl font-bold shadow-sm">
+            이전
+        </button>
+
+        <button id="nextMonth"
+                class="bg-white border-2 border-gray-100 p-2 px-5 rounded-2xl font-bold shadow-sm">
+            다음
+        </button>
+
+    </div>
+
     </header>
 
     <div id="calendar" class="calendar-grid shadow-2xl"></div>
@@ -653,8 +668,24 @@ document.getElementById('saveBtn').onclick = async ()=>{
    INIT
 ========================= */
 renderCalendar();
+window.loginGoogle = async function () {
+    try {
+        await signInWithPopup(auth, provider);
+        showToast("로그인 완료");
+    } catch (e) {
+        console.error(e);
+        showToast("로그인 실패");
+    }
+};
 
+window.logoutGoogle = async function () {
+    await signOut(auth);
+    showToast("로그아웃 완료");
+};
 </script>
-    
+    <div style="position:fixed; top:10px; right:10px; z-index:9999;">
+    <button onclick="loginGoogle()">로그인</button>
+    <button onclick="logoutGoogle()">로그아웃</button>
+    </div>
 </body>
 </html>
