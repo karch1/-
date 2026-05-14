@@ -377,7 +377,30 @@
 
 <div id="toast">메시지가 표시됩니다.</div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBU3jeOqj_FCBXeO2ghh5XlHBrQbUjNaiA",
+    authDomain: "ahn-jin-zero.firebaseapp.com",
+    projectId: "ahn-jin-zero",
+    storageBucket: "ahn-jin-zero.firebasestorage.app",
+    messagingSenderId: "55250475892",
+    appId: "1:55250475892:web:c87555da879be518faaa21",
+    measurementId: "G-V2TEL4TNPJ"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
 
     const state = {
         currentDate: new Date(),
@@ -854,65 +877,83 @@
         reader.readAsText(file);
     };
 
-    function init() {
+function init() {
 
-        renderCalendar();
+    async function firebaseTest() {
 
-        setInterval(() => {
+        try {
 
-            const now = new Date();
-
-            const nowStr = formatDate(now);
-
-            const timeStr =
-                `${String(now.getHours()).padStart(2, '0')}:${
-                    String(now.getMinutes()).padStart(2, '0')
-                }`;
-
-            state.events.forEach(ev => {
-
-                if (
-                    ev.date === nowStr &&
-                    ev.time === timeStr &&
-                    !ev.notified
-                ) {
-
-                    if (
-                        'Notification' in window &&
-                        Notification.permission === 'granted'
-                    ) {
-
-                        new Notification(
-                            `[스케줄러] ${ev.title}`,
-                            {
-                                body: "일정 시간이 되었습니다!"
-                            }
-                        );
-
-                        if (navigator.vibrate) {
-                            navigator.vibrate([200, 100, 200]);
-                        }
-                    }
-
-                    ev.notified = true;
-
-                    saveData();
-                }
+            await addDoc(collection(db, "events"), {
+                title: "테스트 일정",
+                date: "2026-05-14"
             });
 
-        }, 30000);
+            console.log("파이어베이스 저장 성공");
 
-        if ('Notification' in window) {
+        } catch (e) {
 
-            if (Notification.permission === 'default') {
-
-                Notification.requestPermission();
-            }
+            console.error("파이어베이스 에러", e);
         }
     }
 
-    window.addEventListener('DOMContentLoaded', init);
+    firebaseTest();
 
+    renderCalendar();
+
+    setInterval(() => {
+
+        const now = new Date();
+
+        const nowStr = formatDate(now);
+
+        const timeStr =
+            `${String(now.getHours()).padStart(2, '0')}:${
+                String(now.getMinutes()).padStart(2, '0')
+            }`;
+
+        state.events.forEach(ev => {
+
+            if (
+                ev.date === nowStr &&
+                ev.time === timeStr &&
+                !ev.notified
+            ) {
+
+                if (
+                    'Notification' in window &&
+                    Notification.permission === 'granted'
+                ) {
+
+                    new Notification(
+                        `[스케줄러] ${ev.title}`,
+                        {
+                            body: "일정 시간이 되었습니다!"
+                        }
+                    );
+
+                    if (navigator.vibrate) {
+                        navigator.vibrate([200, 100, 200]);
+                    }
+                }
+
+                ev.notified = true;
+
+                saveData();
+            }
+        });
+
+    }, 30000);
+
+    if ('Notification' in window) {
+
+        if (Notification.permission === 'default') {
+
+            Notification.requestPermission();
+        }
+    }
+}
+
+window.addEventListener('DOMContentLoaded', init);
 </script>
 
 </body>
