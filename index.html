@@ -423,16 +423,16 @@ const state = {
 };
 
 /* =========================
-   👤 사용자 프로필 (핵심)
+   👤 사용자 프로필 (핵심 FIX)
    ========================= */
 const userColorMap = {
-    "choae000@gmail.com": "#6366f1",   // 보라
-    "ssang9764@gmail.com": "#38bdf8",  // 하늘색
-    "cksgml0@naver.com": "#8b5e3c",    // 갈색
+    "choae000@gmail.com": { name: "갈치", color: "#6366f1" },   // 보라
+    "ssang9764@gmail.com": { name: "생마", color: "#38bdf8" },  // 하늘색
+    "cksgml0@naver.com": { name: "연막", color: "#8b5e3c" },  // 갈색
 
-    // 미정 친구 2명 (임시 배정)
-    "friend1@gmail.com": "#ef4444",    // 빨강
-    "friend2@gmail.com": "#10b981"     // 초록
+    // 미정 친구 2명
+    "friend1@gmail.com": { name: "안진영", color: "#ef4444" },    // 빨강
+    "friend2@gmail.com": { name: "버기", color: "#10b981" }     // 초록
 };
 
 const calendarEl = document.getElementById('calendar');
@@ -476,13 +476,7 @@ onAuthStateChanged(auth, (user) => {
 
     if (user) {
 
-        const allowed = [
-            "choae000@gmail.com",
-            "ssang9764@gmail.com",
-            "friend2@gmail.com",
-            "friend3@gmail.com",
-            "friend4@gmail.com"
-        ];
+        const allowed = Object.keys(userColorMap);
 
         if (!allowed.includes(user.email)) {
             alert("허용되지 않은 사용자입니다.");
@@ -491,9 +485,9 @@ onAuthStateChanged(auth, (user) => {
         }
 
         const profile = userColorMap[user.email] || {
-    name: "익명",
-    color: "#999999"
-};
+            name: "익명",
+            color: "#999999"
+        };
 
         state.currentUser = {
             uid: user.uid,
