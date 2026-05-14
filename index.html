@@ -451,6 +451,30 @@ function showToast(msg){
 }
 
 /* =========================
+   🔥 핵심 FIX 1: openAddForm 추가
+========================= */
+window.openAddForm = function(){
+
+    if(!state.currentUser){
+        showToast("로그인 필요");
+        return;
+    }
+
+    document.getElementById('eventTitle').value = "";
+    document.getElementById('eventTime').value = "";
+    document.getElementById('eventInitialMemo').value = "";
+
+    document.getElementById('editModal').style.display = "flex";
+};
+
+/* =========================
+   🔥 핵심 FIX 2: 모달 닫기
+========================= */
+window.closeModal = function(id){
+    document.getElementById(id).style.display = "none";
+};
+
+/* =========================
    AUTH
 ========================= */
 onAuthStateChanged(auth, (user)=>{
@@ -535,7 +559,7 @@ function renderCalendar(){
 }
 
 /* =========================
-   MODAL OPEN (핵심)
+   MODAL OPEN
 ========================= */
 window.openDayModal = function(dateStr){
 
@@ -552,7 +576,7 @@ window.openDayModal = function(dateStr){
     list.innerHTML = "";
 
     if(events.length === 0){
-        list.innerHTML = `<div>일정 없음</div>`;
+        list.innerHTML = "일정 없음";
     }
 
     events.forEach(e=>{
@@ -568,10 +592,6 @@ window.openDayModal = function(dateStr){
     });
 
     modal.style.display = "flex";
-};
-
-window.closeModal = (id)=>{
-    document.getElementById(id).style.display="none";
 };
 
 /* =========================
@@ -594,7 +614,7 @@ async function loadEvents(){
 }
 
 /* =========================
-   SAVE EVENT (FIXED)
+   SAVE EVENT
 ========================= */
 document.getElementById('saveBtn').onclick = async ()=>{
 
