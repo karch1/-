@@ -879,7 +879,11 @@ const db = getFirestore(app);
 
 function init() {
 
+    console.log("init 실행");
+
     async function firebaseTest() {
+
+        console.log("firebaseTest 시작");
 
         try {
 
@@ -953,7 +957,9 @@ function init() {
     }
 }
 
-window.addEventListener('DOMContentLoaded', init);
+console.log("스크립트 로딩 완료");
+
+init();
 </script>
 
 </body>
