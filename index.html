@@ -22,23 +22,29 @@
             font-family: 'Inter', -apple-system, sans-serif;
             background-color: #f3f4f6;
             overscroll-behavior: none;
+            margin: 0;
+            padding: 0;
         }
 
         .calendar-container {
             max-width: 1200px;
             margin: 0 auto;
-            min-height: 90vh;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
         }
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             grid-auto-rows: minmax(100px, 1fr);
             background-color: #e5e7eb;
             gap: 1px;
             border: 1px solid #e5e7eb;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
+            flex-grow: 1;
         }
 
         @media (min-width: 768px) {
@@ -47,131 +53,151 @@
 
         .calendar-day {
             background: var(--calendar-bg);
-            padding: 8px;
+            padding: 6px;
             transition: background 0.2s;
             cursor: pointer;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
             position: relative;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .calendar-day:hover { background: var(--day-hover); }
         .calendar-day.today { background: #fffbeb; }
+        .calendar-day.selected { outline: 3px solid #4f46e5; z-index: 10; }
         
-        .day-num { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
-        .day-label { text-align: center; padding: 12px 0; font-weight: 800; font-size: 0.8rem; color: #6b7280; background: #fff; }
+        .day-num { font-weight: 700; font-size: clamp(0.7rem, 2vw, 0.9rem); margin-bottom: 4px; }
+        .day-label { text-align: center; padding: 12px 0; font-weight: 800; font-size: 0.75rem; color: #6b7280; background: #fff; }
 
         .event-bar {
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 4px;
+            font-size: clamp(0.6rem, 1.5vw, 0.7rem);
+            padding: 3px 6px;
+            border-radius: 6px;
             color: white;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-weight: 600;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            font-weight: 700;
         }
 
         .modal-overlay {
-            display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            z-index: 100;
-            align-items: center;
+            background: rgba(0,0,0,0.5);
+            display: none;
             justify-content: center;
-            padding: 16px;
+            align-items: center;
+            z-index: 100;
+            padding: 1rem;
+            backdrop-filter: blur(2px);
         }
 
         .modal-content {
             background: white;
             width: 100%;
             max-width: 500px;
-            border-radius: 20px;
+            border-radius: 24px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            animation: modalFadeIn 0.3s ease-out;
-            pointer-events: auto; /* 컨텐츠 내부 클릭은 이벤트 전파 */
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        @keyframes modalFadeIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
         }
 
-        .btn-primary { background: #4f46e5; color: white; padding: 12px; border-radius: 12px; font-weight: 700; width: 100%; }
-        .btn-primary:active { transform: scale(0.98); }
+        .comment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            background: #f9fafb;
+            padding: 10px 14px;
+            border-radius: 12px;
+            text-align: left;
+            border-left: 4px solid #e5e7eb;
+            margin-bottom: 8px;
+        }
+
+        .comment-text { font-size: 0.85rem; color: #4b5563; font-weight: 500; line-height: 1.4; word-break: break-all; }
+        .comment-delete { color: #d1d5db; font-size: 1.2rem; cursor: pointer; padding: 0 4px; }
+        .comment-delete:hover { color: #ef4444; }
+
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+            padding: 1rem;
+            border-radius: 16px;
+            font-weight: 800;
+            width: 100%;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+        .btn-primary:active { transform: scale(0.98); background: #4338ca; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body>
 
     <div class="calendar-container">
-        <header class="flex justify-between items-center mb-6">
+        <header class="flex justify-between items-center mb-6 px-2">
             <div>
-                <h1 id="monthDisplay" class="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">2023년 10월</h1>
+                <h1 id="monthDisplay" class="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">2024년 5월</h1>
             </div>
             <div class="flex gap-2">
-                <button id="prevMonth" class="bg-white border p-2 px-4 rounded-xl font-bold shadow-sm active:bg-gray-100">이전</button>
-                <button id="nextMonth" class="bg-white border p-2 px-4 rounded-xl font-bold shadow-sm active:bg-gray-100">다음</button>
+                <button id="prevMonth" class="bg-white border-2 border-gray-100 p-2 px-5 rounded-2xl font-bold shadow-sm active:bg-gray-50 text-gray-700">이전</button>
+                <button id="nextMonth" class="bg-white border-2 border-gray-100 p-2 px-5 rounded-2xl font-bold shadow-sm active:bg-gray-50 text-gray-700">다음</button>
             </div>
         </header>
 
-        <div id="calendar" class="calendar-grid shadow-xl">
-            <!-- JS에서 동적 생성됨 -->
-        </div>
+        <div id="calendar" class="calendar-grid shadow-2xl"></div>
 
-        <footer class="mt-8 flex flex-wrap justify-center gap-4 border-t pt-6">
-            <button id="exportBtn" class="text-sm font-semibold text-gray-500 hover:text-indigo-600 transition">데이터 백업 (JSON)</button>
-            <button id="importBtn" class="text-sm font-semibold text-gray-500 hover:text-indigo-600 transition">데이터 복구</button>
-            <input type="file" id="importFile" class="hidden" accept=".json">
+        <footer class="mt-6 flex justify-center gap-4">
+            <button id="exportBtn" class="text-xs font-bold text-gray-400">데이터 백업</button>
+            <button id="importBtn" class="text-xs font-bold text-gray-400">데이터 복구</button>
+            <input type="file" id="importFile" class="hidden">
         </footer>
     </div>
 
-    <div id="dayModal" class="modal-overlay">
-        <div class="modal-content p-6">
+    <div id="dayModal" class="modal-overlay" onclick="closeModal('dayModal')">
+        <div class="modal-content p-7" onclick="event.stopPropagation()">
             <div class="flex justify-between items-start mb-6">
                 <div>
-                    <h2 id="modalDateTitle" class="text-xl font-bold text-gray-900">10월 25일</h2>
-                    <p class="text-sm text-gray-500 font-medium">이날의 일정 목록</p>
+                    <h2 id="modalDateTitle" class="text-2xl font-black text-gray-900">날짜</h2>
+                    <p class="text-sm text-gray-400 font-bold">오늘의 타임라인</p>
                 </div>
-                <button onclick="closeModal('dayModal')" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                <button onclick="closeModal('dayModal')" class="text-gray-300 hover:text-gray-500 text-3xl font-light">&times;</button>
             </div>
-
-            <div id="modalEventList" class="space-y-4 mb-6">
-                <!-- 일정 아이템 동적 생성 -->
-            </div>
-
+            <div id="modalEventList" class="space-y-4 mb-8"></div>
             <button onclick="openAddForm()" class="btn-primary flex items-center justify-center gap-2">
-                <span>+ 새 일정 추가하기</span>
+                <span class="text-xl">+</span> <span>새로운 일정 추가</span>
             </button>
         </div>
     </div>
 
-    <div id="editModal" class="modal-overlay">
-        <div class="modal-content p-6">
+    <div id="editModal" class="modal-overlay" onclick="closeModal('editModal')">
+        <div class="modal-content p-7" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-6">
-                <h2 id="formTitle" class="text-xl font-bold">📅 일정 작성</h2>
-                <button onclick="closeModal('editModal')" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                <h2 id="formTitle" class="text-xl font-black text-indigo-600">📅 일정 작성</h2>
+                <button onclick="closeModal('editModal')" class="text-gray-300 hover:text-gray-500 text-3xl font-light">&times;</button>
             </div>
-
-            <div class="space-y-4">
+            <div class="space-y-5">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">제목</label>
-                    <input type="text" id="eventTitle" class="w-full p-4 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="어떤 일인가요?">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">일정 제목</label>
+                    <input type="text" id="eventTitle" placeholder="일정 이름을 입력하세요" class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-indigo-500 outline-none font-bold">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">시간</label>
-                        <input type="time" id="eventTime" class="w-full p-4 bg-gray-50 border rounded-xl outline-none">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">시간 (알림)</label>
+                        <input type="time" id="eventTime" class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl outline-none font-bold">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">색상</label>
-                        <select id="eventColor" class="w-full p-4 bg-gray-50 border rounded-xl outline-none">
-                            <option value="#6366f1">보라 (기본)</option>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">색상</label>
+                        <select id="eventColor" class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl outline-none font-bold">
+                            <option value="#6366f1">보라 (업무)</option>
                             <option value="#ef4444">빨강 (중요)</option>
                             <option value="#10b981">초록 (운동)</option>
                             <option value="#f59e0b">노랑 (약속)</option>
@@ -179,8 +205,26 @@
                         </select>
                     </div>
                 </div>
+                <div>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">상세 메모 (선택)</label>
+                    <textarea id="eventInitialMemo" rows="3" placeholder="메모를 입력하세요. 첫 등록 시 함께 저장됩니다." class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-indigo-500 outline-none font-bold text-sm"></textarea>
+                </div>
                 <input type="hidden" id="editId">
-                <button id="saveBtn" class="btn-primary mt-4">일정 저장하기</button>
+                <button id="saveBtn" class="btn-primary shadow-lg shadow-indigo-100">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="commentModal" class="modal-overlay" onclick="closeModal('commentModal')">
+        <div class="modal-content p-7" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-black text-indigo-600">📝 메모 추가</h2>
+                <button onclick="closeModal('commentModal')" class="text-gray-300 hover:text-gray-500 text-3xl font-light">&times;</button>
+            </div>
+            <div class="space-y-5">
+                <textarea id="commentInput" rows="4" class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-indigo-500 outline-none font-bold text-sm" placeholder="새로운 메모 내용을 입력하세요..."></textarea>
+                <input type="hidden" id="commentTargetId">
+                <button id="saveCommentBtn" class="btn-primary shadow-lg shadow-indigo-100">메모 저장</button>
             </div>
         </div>
     </div>
@@ -188,65 +232,25 @@
     <script>
         const state = {
             currentDate: new Date(),
-            selectedDateStr: "",
-            events: JSON.parse(localStorage.getItem('scheduler_v8')) || [],
+            events: JSON.parse(localStorage.getItem('smart_scheduler_v15')) || [],
+            selectedDateStr: '',
             notifPermission: Notification.permission
         };
 
         const calendarEl = document.getElementById('calendar');
         const monthDisplay = document.getElementById('monthDisplay');
-        const saveBtn = document.getElementById('saveBtn');
 
-        window.onload = () => {
-            renderCalendar();
-            setupNotifications();
-            setupModalClosing(); // 배경 클릭 닫기 이벤트 등록
+        // 전역 함수 정의
+        window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; };
+
+        window.openAddForm = function() {
+            document.getElementById('formTitle').innerText = "📅 일정 작성";
+            document.getElementById('editId').value = "";
+            document.getElementById('eventTitle').value = "";
+            document.getElementById('eventTime').value = "";
+            document.getElementById('eventInitialMemo').value = ""; // 초기화
+            document.getElementById('editModal').style.display = 'flex';
         };
-
-        function setupModalClosing() {
-            // 모든 모달 오버레이를 찾아서 클릭 이벤트를 추가합니다.
-            const modals = document.querySelectorAll('.modal-overlay');
-            modals.forEach(modal => {
-                modal.addEventListener('click', (e) => {
-                    // 클릭된 타겟이 'content'가 아닌 'overlay' 자체일 경우에만 닫습니다.
-                    if (e.target === modal) {
-                        closeModal(modal.id);
-                    }
-                });
-            });
-        }
-
-        function setupNotifications() {
-            if (state.notifPermission === 'default') {
-                Notification.requestPermission().then(p => state.notifPermission = p);
-            }
-            setInterval(() => {
-                if (state.notifPermission !== 'granted') return;
-                const now = new Date();
-                const dStr = formatDate(now);
-                const tStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                
-                state.events.forEach(ev => {
-                    if (ev.date === dStr && ev.time === tStr && !ev.notified) {
-                        new Notification(`[일정] ${ev.title}`, { body: `${ev.time} 일정이 시작됩니다.` });
-                        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                        ev.notified = true;
-                        saveData();
-                    }
-                });
-            }, 60000);
-        }
-
-        function formatDate(date) {
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate()).padStart(2, '0');
-            return `${y}-${m}-${d}`;
-        }
-
-        function saveData() {
-            localStorage.setItem('scheduler_v8', JSON.stringify(state.events));
-        }
 
         function renderCalendar() {
             calendarEl.innerHTML = '';
@@ -268,7 +272,7 @@
 
             for (let i = 0; i < firstDay; i++) {
                 const empty = document.createElement('div');
-                empty.className = 'calendar-day bg-gray-50 cursor-default';
+                empty.className = 'calendar-day bg-gray-50/50 cursor-default';
                 calendarEl.appendChild(empty);
             }
 
@@ -277,24 +281,26 @@
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'calendar-day';
                 if (dateStr === formatDate(new Date())) dayDiv.classList.add('today');
+                if (dateStr === state.selectedDateStr) dayDiv.classList.add('selected');
                 
                 dayDiv.innerHTML = `<span class="day-num">${d}</span>`;
                 
                 const dayEvents = state.events.filter(e => e.date === dateStr);
                 dayEvents.sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
                 
-                dayEvents.slice(0, 3).forEach(ev => {
+                const maxVisible = window.innerWidth < 768 ? 2 : 4;
+                dayEvents.slice(0, maxVisible).forEach(ev => {
                     const bar = document.createElement('div');
                     bar.className = 'event-bar';
                     bar.style.backgroundColor = ev.color;
-                    bar.innerText = (ev.time ? ev.time + ' ' : '') + ev.title;
+                    bar.innerText = ev.title;
                     dayDiv.appendChild(bar);
                 });
 
-                if (dayEvents.length > 3) {
+                if (dayEvents.length > maxVisible) {
                     const more = document.createElement('div');
-                    more.className = 'text-[10px] font-bold text-gray-400 pl-1';
-                    more.innerText = `+${dayEvents.length - 3} 더보기`;
+                    more.className = 'text-[9px] font-black text-indigo-400 mt-auto text-right';
+                    more.innerText = `+${dayEvents.length - maxVisible}`;
                     dayDiv.appendChild(more);
                 }
 
@@ -309,6 +315,7 @@
             document.getElementById('modalDateTitle').innerText = `${d.getMonth()+1}월 ${d.getDate()}일`;
             renderModalEvents();
             document.getElementById('dayModal').style.display = 'flex';
+            renderCalendar();
         }
 
         function renderModalEvents() {
@@ -317,50 +324,45 @@
             const dayEvents = state.events.filter(e => e.date === state.selectedDateStr);
 
             if (dayEvents.length === 0) {
-                list.innerHTML = `<div class="py-10 text-center text-gray-400 font-medium">등록된 일정이 없습니다.</div>`;
+                list.innerHTML = `<div class="py-16 text-center text-gray-300 font-bold">등록된 일정이 없습니다.</div>`;
                 return;
             }
 
             dayEvents.forEach(ev => {
                 const item = document.createElement('div');
-                item.className = 'bg-white border-2 rounded-2xl p-4 shadow-sm';
+                item.className = 'bg-white border-2 rounded-2xl p-5 shadow-sm';
                 item.style.borderColor = ev.color;
+                
+                const commentsHtml = (ev.comments || []).map((c, idx) => `
+                    <div class="comment-item">
+                        <span class="comment-text">${c}</span>
+                        <span class="comment-delete" onclick="deleteComment('${ev.id}', ${idx})">&times;</span>
+                    </div>
+                `).join('');
+
                 item.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <h4 class="font-extrabold text-lg">${ev.title}</h4>
-                            <span class="text-xs font-bold text-gray-400">${ev.time ? '⏰ ' + ev.time : '시간 미설정'}</span>
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1 pr-4">
+                            <h4 class="font-black text-lg text-gray-900 leading-tight">${ev.title}</h4>
+                            <span class="text-xs font-bold text-gray-400 block mt-1">${ev.time ? '⏰ ' + ev.time : '시간 미설정'}</span>
                         </div>
-                        <div class="flex gap-3">
-                            <button onclick="editEvent('${ev.id}')" class="text-indigo-600 font-bold text-sm">수정</button>
-                            <button onclick="deleteEvent('${ev.id}')" class="text-red-500 font-bold text-sm">삭제</button>
+                        <div class="flex gap-4">
+                            <button onclick="editEvent('${ev.id}')" class="text-indigo-500 font-black text-xs">수정</button>
+                            <button onclick="deleteEvent('${ev.id}')" class="text-red-400 font-black text-xs">삭제</button>
                         </div>
                     </div>
-                    <div class="mt-3 space-y-2">
-                        ${(ev.comments || []).map(c => `<div class="text-sm bg-gray-50 p-2 rounded-lg text-gray-600 leading-relaxed border-l-4 border-gray-200">${c}</div>`).join('')}
-                    </div>
-                    <button onclick="addComment('${ev.id}')" class="mt-3 text-xs font-bold text-gray-400 hover:text-indigo-600">+ 메모 추가</button>
+                    <div class="mt-4 space-y-1">${commentsHtml}</div>
+                    <button onclick="openCommentModal('${ev.id}')" class="mt-4 text-[10px] font-black text-gray-300 hover:text-indigo-400">+ 메모 추가</button>
                 `;
                 list.appendChild(item);
             });
         }
 
-        function openAddForm() {
-            document.getElementById('formTitle').innerText = "📅 일정 추가";
-            document.getElementById('editId').value = "";
-            document.getElementById('eventTitle').value = "";
-            document.getElementById('eventTime').value = "";
-            document.getElementById('editModal').style.display = 'flex';
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-
-        saveBtn.onclick = () => {
+        document.getElementById('saveBtn').onclick = function() {
             const title = document.getElementById('eventTitle').value.trim();
             const time = document.getElementById('eventTime').value;
             const color = document.getElementById('eventColor').value;
+            const initialMemo = document.getElementById('eventInitialMemo').value.trim();
             const editId = document.getElementById('editId').value;
 
             if (!title) return;
@@ -368,13 +370,14 @@
             if (editId) {
                 const idx = state.events.findIndex(e => e.id === editId);
                 state.events[idx] = { ...state.events[idx], title, time, color, notified: false };
+                // 수정 시에도 메모가 입력되어 있다면 추가해줌
+                if (initialMemo) state.events[idx].comments.push(initialMemo);
             } else {
+                const newComments = initialMemo ? [initialMemo] : [];
                 state.events.push({
-                    id: 'ev' + Date.now(),
+                    id: 'ev_' + Date.now(),
                     date: state.selectedDateStr,
-                    title, time, color,
-                    comments: [],
-                    notified: false
+                    title, time, color, notified: false, comments: newComments
                 });
             }
 
@@ -384,8 +387,11 @@
             closeModal('editModal');
         };
 
+        function saveData() { localStorage.setItem('smart_scheduler_v15', JSON.stringify(state.events)); }
+        function formatDate(date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
+
         window.deleteEvent = (id) => {
-            if (!confirm("이 일정을 삭제하시겠습니까?")) return;
+            if(!confirm("이 일정을 삭제할까요?")) return;
             state.events = state.events.filter(e => e.id !== id);
             saveData();
             renderCalendar();
@@ -399,15 +405,34 @@
             document.getElementById('eventTitle').value = ev.title;
             document.getElementById('eventTime').value = ev.time || "";
             document.getElementById('eventColor').value = ev.color;
+            document.getElementById('eventInitialMemo').value = ""; // 수정시엔 기존 댓글 목록이 아래 뜨므로 초기메모칸은 비움
             document.getElementById('editModal').style.display = 'flex';
         };
 
-        window.addComment = (id) => {
-            const msg = prompt("메모를 입력하세요:");
-            if (msg && msg.trim()) {
-                const idx = state.events.findIndex(e => e.id === id);
-                if (!state.events[idx].comments) state.events[idx].comments = [];
-                state.events[idx].comments.push(msg.trim());
+        window.openCommentModal = (id) => {
+            document.getElementById('commentTargetId').value = id;
+            document.getElementById('commentInput').value = "";
+            document.getElementById('commentModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('commentInput').focus(), 100);
+        };
+
+        document.getElementById('saveCommentBtn').onclick = () => {
+            const id = document.getElementById('commentTargetId').value;
+            const text = document.getElementById('commentInput').value.trim();
+            if (!text) return;
+            const idx = state.events.findIndex(e => e.id === id);
+            if (idx !== -1) {
+                state.events[idx].comments.push(text);
+                saveData();
+                renderModalEvents();
+                closeModal('commentModal');
+            }
+        };
+
+        window.deleteComment = (eventId, commentIdx) => {
+            const evIdx = state.events.findIndex(e => e.id === eventId);
+            if (evIdx !== -1) {
+                state.events[evIdx].comments.splice(commentIdx, 1);
                 saveData();
                 renderModalEvents();
             }
@@ -415,30 +440,46 @@
 
         document.getElementById('prevMonth').onclick = () => { state.currentDate.setMonth(state.currentDate.getMonth() - 1); renderCalendar(); };
         document.getElementById('nextMonth').onclick = () => { state.currentDate.setMonth(state.currentDate.getMonth() + 1); renderCalendar(); };
-
+        
         document.getElementById('exportBtn').onclick = () => {
             const blob = new Blob([JSON.stringify(state.events, null, 2)], {type: "application/json"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `calendar_backup_${formatDate(new Date())}.json`;
-            a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = `scheduler_backup_${formatDate(new Date())}.json`; a.click();
         };
 
         document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
         document.getElementById('importFile').onchange = (e) => {
             const file = e.target.files[0];
-            if (!file) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
                 try {
                     state.events = JSON.parse(ev.target.result);
-                    saveData();
-                    renderCalendar();
+                    saveData(); renderCalendar();
                     alert("데이터 복구가 완료되었습니다.");
-                } catch(err) { alert("잘못된 파일 형식입니다."); }
+                } catch(e) { alert("잘못된 파일 형식입니다."); }
             };
             reader.readAsText(file);
+        };
+
+        window.onload = () => { 
+            renderCalendar(); 
+            // 실시간 알림 체크 로직 (예시)
+            setInterval(() => {
+                const now = new Date();
+                const nowStr = formatDate(now);
+                const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                
+                state.events.forEach(ev => {
+                    if (ev.date === nowStr && ev.time === timeStr && !ev.notified) {
+                        if (Notification.permission === 'granted') {
+                            new Notification(`[스케줄러] ${ev.title}`, { body: "일정 시간이 되었습니다!" });
+                            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                        }
+                        ev.notified = true;
+                        saveData();
+                    }
+                });
+            }, 30000);
         };
     </script>
 </body>
