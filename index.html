@@ -379,6 +379,7 @@
 <div id="toast">메시지가 표시됩니다.</div>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
 
 import {
@@ -390,24 +391,36 @@ import {
     doc
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
+import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+
 const firebaseConfig = {
-    apiKey: "AIzaSyBU3jeOqj_FCBXeO2ghh5XlHBrQbUjNaiA",
-    authDomain: "ahn-jin-zero.firebaseapp.com",
-    projectId: "ahn-jin-zero",
-    storageBucket: "ahn-jin-zero.firebasestorage.app",
-    messagingSenderId: "55250475892",
-    appId: "1:55250475892:web:c87555da879be518faaa21",
-    measurementId: "G-V2TEL4TNPJ"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.firebasestorage.app",
+    messagingSenderId: "YOUR_ID",
+    appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
+const auth = getAuth(app);
+
+const provider = new GoogleAuthProvider();
+
 const state = {
     currentDate: new Date(),
     events: [],
     selectedDateStr: '',
+    currentUser: null,
     notifPermission: ('Notification' in window)
         ? Notification.permission
         : 'denied'
@@ -428,12 +441,67 @@ function showToast(msg) {
     }, 2000);
 }
 
+window.loginGoogle = async function () {
+
+    try {
+
+        await signInWithPopup(auth, provider);
+
+        showToast("구글 로그인 완료!");
+
+    } catch (e) {
+
+        console.error(e);
+
+        showToast("로그인 실패");
+    }
+};
+
+window.logoutGoogle = async function () {
+
+    await signOut(auth);
+
+    showToast("로그아웃 완료");
+};
+
+onAuthStateChanged(auth, (user) => {
+
+    if (user) {
+
+        state.currentUser = {
+            uid: user.uid,
+            name: user.displayName,
+            email: user.email,
+            photo: user.photoURL
+        };
+
+        console.log("로그인 사용자:", state.currentUser);
+
+        loadEvents();
+
+    } else {
+
+        state.currentUser = null;
+
+        state.events = [];
+
+        renderCalendar();
+    }
+});
+
 window.closeModal = function(id) {
 
     document.getElementById(id).style.display = 'none';
 };
 
 window.openAddForm = function() {
+
+    if (!state.currentUser) {
+
+        showToast("로그인 후 이용 가능합니다.");
+
+        return;
+    }
 
     document.getElementById('formTitle').innerText = "📅 일정 작성";
 
@@ -464,11 +532,11 @@ function renderCalendar() {
         label.className = 'day-label';
 
         if (i === 0) {
-            label.style.color = 'var(--sunday-text)';
+            label.style.color = '#ef4444';
         }
 
         if (i === 6) {
-            label.style.color = 'var(--saturday-text)';
+            label.style.color = '#3b82f6';
         }
 
         label.innerText = day;
@@ -521,7 +589,9 @@ function renderCalendar() {
             const bar = document.createElement('div');
 
             bar.className = 'event-bar';
+
             bar.style.backgroundColor = ev.color;
+
             bar.innerText = ev.title;
 
             dayDiv.appendChild(bar);
@@ -612,6 +682,11 @@ function renderModalEvents() {
                     <span class="text-xs font-bold text-gray-400 block mt-1">
                         ${ev.time ? '⏰ ' + ev.time : '시간 미설정'}
                     </span>
+
+                    <div class="mt-2 text-[11px] font-bold text-indigo-500">
+                        작성자 : ${ev.userName || "알 수 없음"}
+                    </div>
+
                 </div>
 
                 <div class="flex gap-4">
@@ -644,6 +719,13 @@ function renderModalEvents() {
 
 document.getElementById('saveBtn').onclick = async function() {
 
+    if (!state.currentUser) {
+
+        showToast("로그인이 필요합니다.");
+
+        return;
+    }
+
     const title =
         document.getElementById('eventTitle').value.trim();
 
@@ -666,80 +748,51 @@ document.getElementById('saveBtn').onclick = async function() {
         return;
     }
 
-    if (editId) {
+    const newComments =
+        initialMemo ? [initialMemo] : [];
 
-        const idx =
-            state.events.findIndex(e => e.id === editId);
+    const newEvent = {
 
-        state.events[idx] = {
-            ...state.events[idx],
-            title,
-            time,
-            color,
-            notified: false
-        };
+        date: state.selectedDateStr,
+        title,
+        time,
+        color,
+        notified: false,
+        comments: newComments,
 
-        if (initialMemo) {
+        userUid: state.currentUser.uid,
+        userEmail: state.currentUser.email,
+        userName: state.currentUser.name,
+        userPhoto: state.currentUser.photo,
 
-            state.events[idx].comments.push(initialMemo);
-        }
+        createdAt: new Date()
+    };
+
+    try {
+
+        const docRef =
+            await addDoc(collection(db, "events"), newEvent);
+
+        state.events.push({
+            id: docRef.id,
+            ...newEvent
+        });
 
         renderCalendar();
+
         renderModalEvents();
 
         closeModal('editModal');
 
-        showToast("수정되었습니다.");
+        showToast("일정 저장 완료!");
 
-    } else {
+    } catch (err) {
 
-        const newComments =
-            initialMemo ? [initialMemo] : [];
+        console.error(err);
 
-        const newEvent = {
-    date: state.selectedDateStr,
-    title,
-    time,
-    color,
-    notified: false,
-    comments: newComments,
-
-    userEmail: "choae000@gmail.com",
-    userName: "갈치",
-    userColor: "#6366f1",
-
-    createdAt: new Date()
-};
-
-        try {
-
-            const docRef =
-                await addDoc(collection(db, "events"), newEvent);
-
-            state.events.push({
-                id: docRef.id,
-                ...newEvent
-            });
-
-            renderCalendar();
-            renderModalEvents();
-
-            closeModal('editModal');
-
-            showToast("파이어베이스 저장 완료!");
-
-        } catch (err) {
-
-            console.error(err);
-
-            showToast("저장 실패");
-        }
+        showToast("저장 실패");
     }
 };
-
-function saveData() {
-    // Firebase 사용 중
-}
 
 function formatDate(date) {
 
@@ -764,6 +817,7 @@ window.deleteEvent = async (id) => {
             state.events.filter(e => e.id !== id);
 
         renderCalendar();
+
         renderModalEvents();
 
         showToast("삭제되었습니다.");
@@ -800,12 +854,6 @@ window.openCommentModal = (id) => {
     document.getElementById('commentInput').value = "";
 
     document.getElementById('commentModal').style.display = 'flex';
-
-    setTimeout(() => {
-
-        document.getElementById('commentInput').focus();
-
-    }, 100);
 };
 
 document.getElementById('saveCommentBtn').onclick = () => {
@@ -866,61 +914,6 @@ document.getElementById('nextMonth').onclick = () => {
     renderCalendar();
 };
 
-document.getElementById('exportBtn').onclick = () => {
-
-    const blob = new Blob(
-        [JSON.stringify(state.events, null, 2)],
-        { type: "application/json" }
-    );
-
-    const a = document.createElement('a');
-
-    a.href = URL.createObjectURL(blob);
-
-    a.download =
-        `scheduler_backup_${formatDate(new Date())}.json`;
-
-    a.click();
-
-    showToast("백업 파일이 다운로드됩니다.");
-};
-
-document.getElementById('importBtn').onclick = () => {
-
-    document.getElementById('importFile').click();
-};
-
-document.getElementById('importFile').onchange = (e) => {
-
-    const file = e.target.files[0];
-
-    if (!file) {
-        return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = (ev) => {
-
-        try {
-
-            const data = JSON.parse(ev.target.result);
-
-            state.events = data;
-
-            renderCalendar();
-
-            showToast("데이터 복구 완료!");
-
-        } catch (err) {
-
-            showToast("파일 형식이 잘못되었습니다.");
-        }
-    };
-
-    reader.readAsText(file);
-};
-
 async function loadEvents() {
 
     try {
@@ -932,10 +925,18 @@ async function loadEvents() {
 
         querySnapshot.forEach((doc) => {
 
-            state.events.push({
-                id: doc.id,
-                ...doc.data()
-            });
+            const data = doc.data();
+
+            if (
+                state.currentUser &&
+                data.userUid === state.currentUser.uid
+            ) {
+
+                state.events.push({
+                    id: doc.id,
+                    ...data
+                });
+            }
         });
 
         console.log("불러온 일정 수:", state.events.length);
@@ -950,9 +951,7 @@ async function loadEvents() {
 
 function init() {
 
-    console.log("init 실행");
-
-    loadEvents();
+    renderCalendar();
 
     setInterval(() => {
 
@@ -986,6 +985,7 @@ function init() {
                     );
 
                     if (navigator.vibrate) {
+
                         navigator.vibrate([200, 100, 200]);
                     }
                 }
@@ -1005,9 +1005,8 @@ function init() {
     }
 }
 
-console.log("스크립트 로딩 완료");
-
 init();
+
 </script>
     
 </body>
