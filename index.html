@@ -398,6 +398,9 @@ import {
     signOut
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
+/* =========================
+   FIREBASE INIT
+========================= */
 const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -412,89 +415,61 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+/* =========================
+   STATE
+========================= */
 const state = {
     currentDate: new Date(),
     events: [],
-    selectedDateStr: '',
-    currentUser: null,
-    notifPermission: ('Notification' in window)
-        ? Notification.permission
-        : 'denied'
+    selectedDateStr: null,
+    currentUser: null
 };
 
 /* =========================
-   👤 사용자 프로필 (핵심 FIX)
-   ========================= */
+   USER MAP
+========================= */
 const userColorMap = {
-    "choae000@gmail.com": { name: "갈치", color: "#6366f1" },   // 보라
-    "ssang9764@gmail.com": { name: "생마", color: "#38bdf8" },  // 하늘색
-    "cksgml0@naver.com": { name: "연막", color: "#8b5e3c" },  // 갈색
-
-    // 미정 친구 2명
-    "friend1@gmail.com": { name: "안진영", color: "#ef4444" },    // 빨강
-    "friend2@gmail.com": { name: "버기", color: "#10b981" }     // 초록
+    "choae000@gmail.com": { name: "갈치", color: "#6366f1" },
+    "ssang9764@gmail.com": { name: "생마", color: "#38bdf8" },
+    "cksgml0@naver.com": { name: "연막", color: "#8b5e3c" },
 };
 
+/* =========================
+   ELEMENTS
+========================= */
 const calendarEl = document.getElementById('calendar');
 const monthDisplay = document.getElementById('monthDisplay');
 
 /* =========================
    TOAST
-   ========================= */
-function showToast(msg) {
-    const toast = document.getElementById('toast');
-    toast.innerText = msg;
-    toast.style.opacity = '1';
-
-    setTimeout(() => {
-        toast.style.opacity = '0';
-    }, 2000);
+========================= */
+function showToast(msg){
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.style.opacity = 1;
+    setTimeout(()=>t.style.opacity=0,2000);
 }
 
 /* =========================
-   LOGIN
-   ========================= */
-window.loginGoogle = async function () {
-    try {
-        await signInWithPopup(auth, provider);
-        showToast("로그인 완료!");
-    } catch (e) {
-        console.error(e);
-        showToast("로그인 실패");
-    }
-};
+   AUTH
+========================= */
+onAuthStateChanged(auth, (user)=>{
 
-window.logoutGoogle = async function () {
-    await signOut(auth);
-    showToast("로그아웃 완료");
-};
+    if(user){
 
-/* =========================
-   AUTH STATE
-   ========================= */
-onAuthStateChanged(auth, (user) => {
-
-    if (user) {
-
-        const allowed = Object.keys(userColorMap);
-
-        if (!allowed.includes(user.email)) {
-            alert("허용되지 않은 사용자입니다.");
+        if(!userColorMap[user.email]){
+            alert("허용되지 않은 사용자");
             signOut(auth);
             return;
         }
 
-        const profile = userColorMap[user.email] || {
-            name: "익명",
-            color: "#999999"
-        };
+        const p = userColorMap[user.email];
 
         state.currentUser = {
             uid: user.uid,
-            name: profile.name,
             email: user.email,
-            photo: user.photoURL,
-            color: profile.color
+            name: p.name,
+            color: p.color
         };
 
         loadEvents();
@@ -507,101 +482,111 @@ onAuthStateChanged(auth, (user) => {
 });
 
 /* =========================
-   ADD FORM OPEN
-   ========================= */
-window.openAddForm = function () {
-
-    if (!state.currentUser) {
-        showToast("로그인 필요");
-        return;
-    }
-
-    document.getElementById('formTitle').innerText = "📅 일정 작성";
-
-    document.getElementById('editId').value = "";
-    document.getElementById('eventTitle').value = "";
-    document.getElementById('eventTime').value = "";
-    document.getElementById('eventColor').value = state.currentUser.color;
-    document.getElementById('eventInitialMemo').value = "";
-
-    document.getElementById('editModal').style.display = 'flex';
-};
-
-/* =========================
-   CALENDAR
-   ========================= */
-function renderCalendar() {
+   CALENDAR RENDER
+========================= */
+function renderCalendar(){
 
     calendarEl.innerHTML = '';
 
-    const year = state.currentDate.getFullYear();
-    const month = state.currentDate.getMonth();
+    const y = state.currentDate.getFullYear();
+    const m = state.currentDate.getMonth();
 
-    monthDisplay.innerText = `${year}년 ${month + 1}월`;
+    monthDisplay.innerText = `${y}년 ${m+1}월`;
 
-    const dayLabels = ['일','월','화','수','목','금','토'];
+    const days = ['일','월','화','수','목','금','토'];
 
-    dayLabels.forEach((d,i)=>{
+    days.forEach(d=>{
         const el = document.createElement('div');
-        el.className = 'day-label';
+        el.className = "day-label";
         el.innerText = d;
         calendarEl.appendChild(el);
     });
 
-    const firstDay = new Date(year, month, 1).getDay();
-    const lastDate = new Date(year, month + 1, 0).getDate();
+    const first = new Date(y,m,1).getDay();
+    const last = new Date(y,m+1,0).getDate();
 
-    for (let i=0;i<firstDay;i++){
-        const empty = document.createElement('div');
-        empty.className = 'calendar-day';
-        calendarEl.appendChild(empty);
+    for(let i=0;i<first;i++){
+        calendarEl.appendChild(document.createElement('div'));
     }
 
-    for (let d=1; d<=lastDate; d++){
+    for(let d=1; d<=last; d++){
 
-        const dateStr =
-            `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'calendar-day';
+        const div = document.createElement('div');
+        div.className = "calendar-day";
 
-        dayDiv.innerHTML = `<span class="day-num">${d}</span>`;
+        div.innerHTML = `<span class="day-num">${d}</span>`;
 
-        const dayEvents = state.events.filter(e => e.date === dateStr);
+        const events = state.events.filter(e=>e.date === dateStr);
 
-        dayEvents.forEach(ev => {
-
+        events.forEach(e=>{
             const bar = document.createElement('div');
-            bar.className = 'event-bar';
-
-            // 👉 작성자 색상
-            bar.style.backgroundColor = ev.userColor || ev.color;
-
-            bar.innerText = ev.title;
-            dayDiv.appendChild(bar);
+            bar.className = "event-bar";
+            bar.style.background = e.userColor;
+            bar.innerText = e.title;
+            div.appendChild(bar);
         });
 
-        dayDiv.onclick = () => openDayModal(dateStr);
-        calendarEl.appendChild(dayDiv);
+        div.onclick = ()=>openDayModal(dateStr);
+
+        calendarEl.appendChild(div);
     }
 }
 
 /* =========================
-   LOAD EVENTS (공유)
-   ========================= */
-async function loadEvents() {
+   MODAL OPEN (핵심)
+========================= */
+window.openDayModal = function(dateStr){
 
-    const snap = await getDocs(collection(db, "events"));
+    state.selectedDateStr = dateStr;
+
+    const modal = document.getElementById('dayModal');
+    const list = document.getElementById('modalEventList');
+    const title = document.getElementById('modalDateTitle');
+
+    title.innerText = dateStr;
+
+    const events = state.events.filter(e=>e.date===dateStr);
+
+    list.innerHTML = "";
+
+    if(events.length === 0){
+        list.innerHTML = `<div>일정 없음</div>`;
+    }
+
+    events.forEach(e=>{
+        const div = document.createElement('div');
+        div.className = "p-3 bg-gray-100 rounded-xl";
+
+        div.innerHTML = `
+            <b>${e.title}</b><br/>
+            <small>${e.time || ""}</small>
+        `;
+
+        list.appendChild(div);
+    });
+
+    modal.style.display = "flex";
+};
+
+window.closeModal = (id)=>{
+    document.getElementById(id).style.display="none";
+};
+
+/* =========================
+   LOAD EVENTS
+========================= */
+async function loadEvents(){
+
+    const snap = await getDocs(collection(db,"events"));
 
     state.events = [];
 
-    snap.forEach(docSnap => {
-
-        const data = docSnap.data();
-
+    snap.forEach(d=>{
         state.events.push({
-            id: docSnap.id,
-            ...data
+            id:d.id,
+            ...d.data()
         });
     });
 
@@ -609,94 +594,45 @@ async function loadEvents() {
 }
 
 /* =========================
-   SAVE EVENT
-   ========================= */
-document.getElementById('saveBtn').onclick = async function () {
+   SAVE EVENT (FIXED)
+========================= */
+document.getElementById('saveBtn').onclick = async ()=>{
+
+    if(!state.selectedDateStr){
+        return showToast("날짜 선택 먼저");
+    }
 
     const title = document.getElementById('eventTitle').value.trim();
     const time = document.getElementById('eventTime').value;
-    const color = document.getElementById('eventColor').value;
-    const memo = document.getElementById('eventInitialMemo').value.trim();
 
-    if (!title) return showToast("제목 입력");
+    if(!title) return showToast("제목 입력");
 
-    const newEvent = {
+    const data = {
         date: state.selectedDateStr,
         title,
         time,
-        color,
-        comments: memo ? [memo] : [],
-
-        userUid: state.currentUser.uid,
-        userEmail: state.currentUser.email,
-        userName: state.currentUser.name,
         userColor: state.currentUser.color,
-
+        userUid: state.currentUser.uid,
         createdAt: new Date()
     };
 
-    const ref = await addDoc(collection(db,"events"), newEvent);
+    const ref = await addDoc(collection(db,"events"), data);
 
     state.events.push({
         id: ref.id,
-        ...newEvent
+        ...data
     });
 
     renderCalendar();
-    renderModalEvents();
     closeModal('editModal');
 
     showToast("저장 완료");
 };
 
 /* =========================
-   DELETE (본인만)
-   ========================= */
-window.deleteEvent = async function(id){
-
-    const ev = state.events.find(e=>e.id===id);
-
-    if(ev.userUid !== state.currentUser.uid){
-        return showToast("본인만 삭제 가능");
-    }
-
-    await deleteDoc(doc(db,"events",id));
-
-    state.events = state.events.filter(e=>e.id!==id);
-
-    renderCalendar();
-    renderModalEvents();
-
-    showToast("삭제 완료");
-};
-
-/* =========================
-   EDIT (본인만)
-   ========================= */
-window.editEvent = function(id){
-
-    const ev = state.events.find(e=>e.id===id);
-
-    if(ev.userUid !== state.currentUser.uid){
-        return showToast("본인만 수정 가능");
-    }
-
-    document.getElementById('editId').value = ev.id;
-    document.getElementById('eventTitle').value = ev.title;
-    document.getElementById('eventTime').value = ev.time || "";
-    document.getElementById('eventColor').value = ev.color;
-
-    document.getElementById('editModal').style.display = 'flex';
-};
-
-/* =========================
    INIT
-   ========================= */
-function init(){
-    renderCalendar();
-}
-
-init();
+========================= */
+renderCalendar();
 
 </script>
     
