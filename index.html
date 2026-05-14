@@ -468,6 +468,17 @@ onAuthStateChanged(auth, (user) => {
 
     if (user) {
 
+        const allowed = [
+            "choae000@gmail.com",
+            "ssang9764@gmail.com",
+            ];
+
+        if (!allowed.includes(user.email)) {
+            alert("허용되지 않은 사용자입니다.");
+            signOut(auth);
+            return;
+        }
+
         state.currentUser = {
             uid: user.uid,
             name: user.displayName,
