@@ -887,12 +887,12 @@ function init() {
 
         try {
 
-            await addDoc(collection(db, "events"), {
+            const docRef = await addDoc(collection(db, "events"), {
                 title: "테스트 일정",
                 date: "2026-05-14"
             });
 
-            console.log("파이어베이스 저장 성공");
+            console.log("파이어베이스 저장 성공", docRef.id);
 
         } catch (e) {
 
@@ -900,7 +900,13 @@ function init() {
         }
     }
 
-    firebaseTest();
+    firebaseTest()
+        .then(() => {
+            console.log("firebaseTest 완료");
+        })
+        .catch((err) => {
+            console.error("firebaseTest 최종 에러", err);
+        });
 
     renderCalendar();
 
