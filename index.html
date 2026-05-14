@@ -490,10 +490,10 @@ onAuthStateChanged(auth, (user) => {
             return;
         }
 
-        const profile = userProfile[user.email] || {
-            name: "익명",
-            color: "#999999"
-        };
+        const profile = userColorMap[user.email] || {
+    name: "익명",
+    color: "#999999"
+};
 
         state.currentUser = {
             uid: user.uid,
