@@ -444,7 +444,7 @@ const state = {
 };
 
 /* =========================
-   USER COLOR MAP
+   USER MAP (개인 색상)
 ========================= */
 const userColorMap = {
     "choae000@gmail.com": { name: "갈치", color: "#6366f1" },
@@ -471,17 +471,16 @@ function showToast(msg){
 /* =========================
    LOGIN
 ========================= */
-window.loginGoogle = async function () {
+window.loginGoogle = async () => {
     try {
         await signInWithPopup(auth, provider);
         showToast("로그인 완료");
     } catch (e) {
-        console.error(e);
         showToast("로그인 실패");
     }
 };
 
-window.logoutGoogle = async function () {
+window.logoutGoogle = async () => {
     await signOut(auth);
     showToast("로그아웃 완료");
 };
@@ -512,7 +511,7 @@ onAuthStateChanged(auth, (user)=>{
 });
 
 /* =========================
-   OPEN ADD
+   OPEN ADD FORM
 ========================= */
 window.openAddForm = function(){
 
@@ -547,7 +546,8 @@ window.editEvent = function(e){
 window.deleteEvent = async function(id){
 
     await deleteDoc(doc(db,"events",id));
-    state.events = state.events.filter(e=>e.id!==id);
+
+    state.events = state.events.filter(e=>e.id !== id);
 
     renderCalendar();
     showToast("삭제 완료");
@@ -595,7 +595,9 @@ document.getElementById('saveBtn').onclick = async ()=>{
         time,
         memo,
         userColor: state.currentUser.color,
-        userUid: state.currentUser.uid
+        userUid: state.currentUser.uid,
+        userEmail: state.currentUser.email,
+        userName: state.currentUser.name
     };
 
     if(state.editId){
@@ -621,7 +623,7 @@ document.getElementById('saveBtn').onclick = async ()=>{
 };
 
 /* =========================
-   TOGGLE FILTER
+   FILTER (내 일정)
 ========================= */
 window.toggleMine = function(){
 
@@ -668,7 +670,7 @@ function renderCalendar(){
 
         div.innerHTML = `<span class="day-num">${d}</span>`;
 
-        let events = state.events.filter(e=>e.date===dateStr);
+        let events = state.events.filter(e=>e.date === dateStr);
 
         if(state.filterMine){
             events = events.filter(e=>e.userUid === state.currentUser.uid);
@@ -679,7 +681,7 @@ function renderCalendar(){
             bar.className = "event-bar";
             bar.style.background = e.userColor;
             bar.innerText = e.title;
-            bar.onclick = ()=>editEvent(e);
+            bar.onclick = () => editEvent(e);
             div.appendChild(bar);
         });
 
@@ -690,7 +692,7 @@ function renderCalendar(){
 }
 
 /* =========================
-   DAY MODAL + COMMENT
+   DAY MODAL (메모 + 수정 + 삭제)
 ========================= */
 window.openDayModal = function(dateStr){
 
@@ -706,7 +708,7 @@ window.openDayModal = function(dateStr){
 
     list.innerHTML = "";
 
-    if(events.length===0){
+    if(events.length === 0){
         list.innerHTML = "일정 없음";
     }
 
@@ -720,11 +722,15 @@ window.openDayModal = function(dateStr){
             <small>${e.time || ""}</small><br/>
             <small>${e.memo || ""}</small><br/>
 
+            <button onclick='(${JSON.stringify(e)})' style="display:none"></button>
+
             <button onclick="editEvent(${JSON.stringify(e).replaceAll('"','&quot;')})">
                 수정
             </button>
 
-            <button onclick="deleteEvent('${e.id}')">삭제</button>
+            <button onclick="deleteEvent('${e.id}')">
+                삭제
+            </button>
         `;
 
         list.appendChild(div);
@@ -733,7 +739,6 @@ window.openDayModal = function(dateStr){
     modal.style.display = "flex";
 };
 
-</script>
-    
+</script>    
 </body>
 </html>
