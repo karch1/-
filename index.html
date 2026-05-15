@@ -177,6 +177,37 @@
     </div>
 </div>
 
+<aside class="fixed left-2 top-24 bg-white shadow-lg rounded-xl p-3 w-40 text-xs font-bold z-50">
+    <div class="mb-2 text-gray-500">👤 사용자</div>
+
+    <div class="flex items-center gap-2 mb-1">
+        <span class="w-3 h-3 rounded-full" style="background:#6366f1"></span>
+        갈치
+    </div>
+
+    <div class="flex items-center gap-2 mb-1">
+        <span class="w-3 h-3 rounded-full" style="background:#38bdf8"></span>
+        생마
+    </div>
+
+    <div class="flex items-center gap-2 mb-1">
+        <span class="w-3 h-3 rounded-full" style="background:#8b5e3c"></span>
+        연막
+    </div>
+
+    <!-- 추가 1 -->
+    <div class="flex items-center gap-2 mb-1">
+        <span class="w-3 h-3 rounded-full" style="background:#ef4444"></span>
+        안크
+    </div>
+
+    <!-- 추가 2 -->
+    <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full" style="background:#f97316"></span>
+        희기
+    </div>
+</aside>
+    
 <!-- TOAST -->
 <div id="toast">알림</div>
 
@@ -239,9 +270,11 @@ const state = {
    USER MAP
 ========================= */
 const userColorMap = {
-    "choae000@gmail.com": { name: "갈치", color: "#6366f1" },
-    "ssang9764@gmail.com": { name: "생마", color: "#38bdf8" },
-    "cksgml0@naver.com": { name: "연막", color: "#8b5e3c" },
+    "choae000@gmail.com": { name: "갈치", color: "#6366f1" }, // 보라
+    "ssang9764@gmail.com": { name: "생마", color: "#38bdf8" }, // 하늘
+    "cksgml0@naver.com": { name: "연막", color: "#8b5e3c" }, // 브라운 
+    "ahn7770@gmail.com": { name: "안크", color: "#ef4444" }, // 빨강
+    "huigi@email.com": { name: "희기", color: "#f97316" },  // 주황
 };
 
 /* =========================
