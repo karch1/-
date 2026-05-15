@@ -132,6 +132,24 @@
             opacity: 0;
             transition: 0.3s;
         }
+
+#userSidebar{
+    transition: 0.3s;
+}
+
+/* 기본 : PC */
+#sidebarToggle{
+    display: none;
+}
+
+/* PC에서는 사이드바 항상 보임 */
+@media (min-width: 769px){
+
+    #userSidebar{
+        transform: translateX(0);
+    }
+
+}
         
         @media (max-width: 768px){
 
@@ -144,12 +162,31 @@
         padding: 2px 4px;
     }
 
+            #userSidebar{
+    transform: translateX(-120%);
+}
+
+#userSidebar.active{
+    transform: translateX(0);
+}
+
+            #sidebarToggle{
+        display: block;
+    }
+
 }
 
     </style>
 </head>
 
 <body>
+
+    <button id="sidebarToggle"
+            class="fixed left-2 top-2 z-[999] btn btn-gray">
+
+        ☰
+
+    </button>
 
     <div class="calendar-container">
 
@@ -183,23 +220,26 @@
     </div>
 
     <!-- RIGHT -->
-    <div class="flex flex-row gap-2">
+   <div class="flex flex-row gap-2">
 
-        <button onclick="loginGoogle()"
-                class="btn btn-blue">
+    <button id="loginBtn"
+            onclick="loginGoogle()"
+            class="btn btn-blue">
 
-            로그인
+        로그인
 
-        </button>
+    </button>
 
-        <button onclick="logoutGoogle()"
-                class="btn btn-red">
+    <button id="logoutBtn"
+            onclick="logoutGoogle()"
+            class="btn btn-red"
+            style="display:none;">
 
-            로그아웃
+        로그아웃
 
-        </button>
+    </button>
 
-    </div>
+</div>
 
 </header>
 
@@ -292,7 +332,8 @@
     </div>
 
     <!-- USER SIDEBAR -->
-    <aside class="fixed left-2 top-24 bg-white shadow-lg rounded-xl p-3 w-40 text-xs font-bold z-50">
+    <aside id="userSidebar"
+       class="fixed left-2 top-24 bg-white shadow-lg rounded-xl p-3 w-40 text-xs font-bold z-50">
 
         <div class="mb-2 text-gray-500">
             👤 사용자
@@ -564,32 +605,44 @@ function canEditEvent(eventData){
 
     onAuthStateChanged(auth, (user)=>{
 
-        if(user && userColorMap[user.email]){
+    const loginBtn =
+        document.getElementById("loginBtn");
 
-            const p = userColorMap[user.email];
+    const logoutBtn =
+        document.getElementById("logoutBtn");
 
-            state.currentUser = {
+    if(user && userColorMap[user.email]){
 
-                uid: user.uid,
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "block";
 
-                email: user.email,
+        const p = userColorMap[user.email];
 
-                name: p.name,
+        state.currentUser = {
 
-                color: p.color
-            };
+            uid: user.uid,
 
-            loadEvents();
+            email: user.email,
 
-        } else {
+            name: p.name,
 
-            state.currentUser = null;
+            color: p.color
+        };
 
-            state.events = [];
+        loadEvents();
 
-            renderCalendar();
-        }
-    });
+    } else {
+
+        loginBtn.style.display = "block";
+        logoutBtn.style.display = "none";
+
+        state.currentUser = null;
+
+        state.events = [];
+
+        renderCalendar();
+    }
+});
 
     /* =========================
        LOAD
@@ -653,6 +706,17 @@ window.nextMonth = function(){
     );
 
     renderCalendar();
+};
+
+    const sidebar =
+    document.getElementById("userSidebar");
+
+const sidebarToggle =
+    document.getElementById("sidebarToggle");
+
+sidebarToggle.onclick = ()=>{
+
+    sidebar.classList.toggle("active");
 };
 
     /* =========================
