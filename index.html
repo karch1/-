@@ -466,7 +466,7 @@ function showToast(msg){
 }
 
 /* =========================
-   🔥 핵심 FIX 1: openAddForm 추가
+   OPEN ADD FORM
 ========================= */
 window.openAddForm = function(){
 
@@ -483,7 +483,26 @@ window.openAddForm = function(){
 };
 
 /* =========================
-   🔥 핵심 FIX 2: 모달 닫기
+   DELETE EVENT
+========================= */
+window.deleteEvent = async function(id){
+
+    try {
+        await deleteDoc(doc(db, "events", id));
+
+        state.events = state.events.filter(e => e.id !== id);
+        renderCalendar();
+
+        showToast("삭제 완료");
+
+    } catch (e) {
+        console.error(e);
+        showToast("삭제 실패");
+    }
+};
+
+/* =========================
+   CLOSE MODAL
 ========================= */
 window.closeModal = function(id){
     document.getElementById(id).style.display = "none";
@@ -600,7 +619,11 @@ window.openDayModal = function(dateStr){
 
         div.innerHTML = `
             <b>${e.title}</b><br/>
-            <small>${e.time || ""}</small>
+            <small>${e.time || ""}</small><br/>
+            <button onclick="deleteEvent('${e.id}')"
+                style="color:red;font-weight:bold;margin-top:5px;">
+                삭제
+            </button>
         `;
 
         list.appendChild(div);
@@ -668,6 +691,7 @@ document.getElementById('saveBtn').onclick = async ()=>{
    INIT
 ========================= */
 renderCalendar();
+
 window.loginGoogle = async function () {
     try {
         await signInWithPopup(auth, provider);
@@ -682,6 +706,7 @@ window.logoutGoogle = async function () {
     await signOut(auth);
     showToast("로그아웃 완료");
 };
+
 </script>
     
 </body>
