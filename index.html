@@ -136,23 +136,54 @@
     <div class="calendar-container">
 
         <!-- HEADER -->
-        <header class="flex justify-between items-center mb-4">
+<header class="flex justify-between items-center mb-4">
 
-            <h1 id="monthDisplay">
-                로딩중...
-            </h1>
+    <!-- LEFT -->
+    <div class="flex items-center gap-2">
 
-            <div>
-                <button onclick="loginGoogle()" class="btn btn-blue">
-                    로그인
-                </button>
+        <button onclick="prevMonth()"
+                class="btn btn-gray">
 
-                <button onclick="logoutGoogle()" class="btn btn-red">
-                    로그아웃
-                </button>
-            </div>
+            ◀
 
-        </header>
+        </button>
+
+        <h1 id="monthDisplay"
+            class="text-xl font-extrabold min-w-[140px] text-center">
+
+            로딩중...
+
+        </h1>
+
+        <button onclick="nextMonth()"
+                class="btn btn-gray">
+
+            ▶
+
+        </button>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="flex gap-2">
+
+        <button onclick="loginGoogle()"
+                class="btn btn-blue">
+
+            로그인
+
+        </button>
+
+        <button onclick="logoutGoogle()"
+                class="btn btn-red">
+
+            로그아웃
+
+        </button>
+
+    </div>
+
+</header>
 
         <!-- CALENDAR -->
         <div id="calendar" class="calendar-grid"></div>
@@ -293,9 +324,6 @@
         알림
     </div>
 
-</body>
-
-</html>
 
 <script type="module">
 
@@ -587,6 +615,27 @@ function canEditEvent(eventData){
 
         document.getElementById('editModal').style.display = "flex";
     };
+    /* =========================
+   MONTH MOVE
+========================= */
+
+window.prevMonth = function(){
+
+    state.currentDate.setMonth(
+        state.currentDate.getMonth() - 1
+    );
+
+    renderCalendar();
+};
+
+window.nextMonth = function(){
+
+    state.currentDate.setMonth(
+        state.currentDate.getMonth() + 1
+    );
+
+    renderCalendar();
+};
 
     /* =========================
        EDIT OPEN
