@@ -378,31 +378,55 @@
 
     const userColorMap = {
 
-        "choae000@gmail.com": {
-            name: "갈치",
-            color: "#6366f1"
-        },
+    "choae000@gmail.com": {
+        name: "갈치",
+        color: "#6366f1"
+    },
 
-        "ssang9764@gmail.com": {
-            name: "생마",
-            color: "#38bdf8"
-        },
+    "ssang9764@gmail.com": {
+        name: "생마",
+        color: "#38bdf8"
+    },
 
-        "cksgml0@naver.com": {
-            name: "연막",
-            color: "#8b5e3c"
-        },
+    "cksgml0@naver.com": {
+        name: "연막",
+        color: "#8b5e3c"
+    },
 
-        "ahn7770@gmail.com": {
-            name: "안크",
-            color: "#ef4444"
-        },
+    "ahn7770@gmail.com": {
+        name: "안크",
+        color: "#ef4444"
+    },
 
-        "huigi@email.com": {
-            name: "희기",
-            color: "#f97316"
-        },
-    };
+    "huigi@email.com": {
+        name: "희기",
+        color: "#f97316"
+    }
+};
+
+/* =========================
+   ADMIN
+========================= */
+
+const ADMIN_EMAIL = "choae000@gmail.com";
+
+function isAdmin(){
+
+    return state.currentUser?.email === ADMIN_EMAIL;
+}
+
+function canEditEvent(eventData){
+
+    if(!state.currentUser)
+        return false;
+
+    // 관리자면 전부 가능
+    if(isAdmin())
+        return true;
+
+    // 일반유저는 자기것만
+    return eventData.userEmail === state.currentUser.email;
+}
 
     /* =========================
        SHIFT LOGIC
@@ -569,7 +593,9 @@
     ========================= */
 
     window.editEvent = function(e){
-
+    if(!canEditEvent(e)){
+    return showToast("본인 일정만 수정 가능");
+}
         state.editId = e.id;
 
         document.getElementById('eventTitle').value = e.title;
@@ -587,15 +613,26 @@
 
     window.deleteEvent = async function(id){
 
-        await deleteDoc(doc(db,"events",id));
+    const target =
+        state.events.find(e => e.id === id);
 
-        state.events =
-            state.events.filter(e=>e.id !== id);
+    if(!target){
+        return showToast("일정을 찾을 수 없음");
+    }
 
-        renderCalendar();
+    if(!canEditEvent(target)){
+        return showToast("본인 일정만 삭제 가능");
+    }
 
-        showToast("삭제 완료");
-    };
+    await deleteDoc(doc(db,"events",id));
+
+    state.events =
+        state.events.filter(e=>e.id !== id);
+
+    renderCalendar();
+
+    showToast("삭제 완료");
+};
 
     /* =========================
        CLOSE
@@ -879,54 +916,70 @@
         const list =
             document.getElementById('modalEventList');
 
-        list.innerHTML = `
-            <div class="p-4 bg-white rounded-xl border shadow">
+       const editable = canEditEvent(e);
 
-                <div class="font-bold text-lg">
-                    ${e.title}
-                </div>
+list.innerHTML = `
+    <div class="p-4 bg-white rounded-xl border shadow">
 
-                <div class="text-sm text-gray-500">
-                    ${e.time || ""}
-                </div>
+        <div class="font-bold text-lg">
+            ${e.title}
+        </div>
 
-                <div class="mt-2 text-sm">
-                    ${e.memo || ""}
-                </div>
+        <div class="text-sm text-gray-500">
+            ${e.time || ""}
+        </div>
 
-                <div style="margin-top:12px;display:flex;gap:6px;">
+        <div class="mt-2 text-sm">
+            ${e.memo || ""}
+        </div>
 
-                    <button
-                        onclick='editEvent(${JSON.stringify(e).replaceAll('"','&quot;')})'
-                        class="px-3 py-1 bg-indigo-500 text-white rounded">
+        <div class="mt-2 text-xs font-bold"
+             style="color:${e.userColor};">
 
-                        수정
+            작성자 : ${e.userName}
+        </div>
 
-                    </button>
+        <div style="margin-top:12px;display:flex;gap:6px;">
 
-                    <button
-                        onclick="deleteEvent('${e.id}')"
-                        class="px-3 py-1 bg-red-500 text-white rounded">
+            ${
+                editable
+                ?
+                `
+                <button
+                    onclick='editEvent(${JSON.stringify(e).replaceAll('"','&quot;')})'
+                    class="px-3 py-1 bg-indigo-500 text-white rounded">
 
-                        삭제
+                    수정
 
-                    </button>
+                </button>
 
-                    <button
-                        onclick="openDayModal('${e.date}')"
-                        class="px-3 py-1 bg-gray-400 text-white rounded">
+                <button
+                    onclick="deleteEvent('${e.id}')"
+                    class="px-3 py-1 bg-red-500 text-white rounded">
 
-                        목록
+                    삭제
 
-                    </button>
+                </button>
+                `
+                :
+                ``
+            }
 
-                </div>
+            <button
+                onclick="openDayModal('${e.date}')"
+                class="px-3 py-1 bg-gray-400 text-white rounded">
 
-            </div>
-        `;
+                목록
 
+            </button>
+
+        </div>
+
+    </div>
+    
+`;
         modal.style.display = "flex";
-    };
+};
 
     </script>
   </body>
