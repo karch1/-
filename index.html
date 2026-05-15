@@ -440,11 +440,12 @@ const state = {
     selectedDateStr: null,
     currentUser: null,
     editId: null,
+    selectedEvent: null,
     filterMine: false
 };
 
 /* =========================
-   USER MAP (개인 색상)
+   USER COLOR MAP
 ========================= */
 const userColorMap = {
     "choae000@gmail.com": { name: "갈치", color: "#6366f1" },
@@ -527,7 +528,7 @@ window.openAddForm = function(){
 };
 
 /* =========================
-   EDIT EVENT
+   EDIT EVENT (모달에서만 수정)
 ========================= */
 window.editEvent = function(e){
 
@@ -541,7 +542,7 @@ window.editEvent = function(e){
 };
 
 /* =========================
-   DELETE
+   DELETE EVENT
 ========================= */
 window.deleteEvent = async function(id){
 
@@ -681,7 +682,13 @@ function renderCalendar(){
             bar.className = "event-bar";
             bar.style.background = e.userColor;
             bar.innerText = e.title;
-            bar.onclick = () => editEvent(e);
+
+            // ❌ 바로 수정 안 감
+            bar.onclick = (ev) => {
+                ev.stopPropagation();
+                openEventDetail(e);
+            };
+
             div.appendChild(bar);
         });
 
@@ -692,7 +699,42 @@ function renderCalendar(){
 }
 
 /* =========================
-   DAY MODAL (메모 + 수정 + 삭제)
+   EVENT DETAIL (핵심)
+========================= */
+window.openEventDetail = function(e){
+
+    state.selectedEvent = e;
+
+    const modal = document.getElementById('dayModal');
+    const list = document.getElementById('modalEventList');
+
+    list.innerHTML = `
+        <div class="p-3 bg-white rounded-xl border">
+            <b>${e.title}</b><br/>
+            <small>${e.time || ""}</small><br/>
+            <small>${e.memo || ""}</small>
+
+            <div style="margin-top:10px;display:flex;gap:6px;">
+                <button onclick='editEvent(${JSON.stringify(e).replaceAll('"','&quot;')})'>
+                    수정
+                </button>
+
+                <button onclick="deleteEvent('${e.id}')">
+                    삭제
+                </button>
+
+                <button onclick="openDayModal('${e.date}')">
+                    목록
+                </button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = "flex";
+};
+
+/* =========================
+   DAY MODAL (목록)
 ========================= */
 window.openDayModal = function(dateStr){
 
@@ -708,30 +750,16 @@ window.openDayModal = function(dateStr){
 
     list.innerHTML = "";
 
-    if(events.length === 0){
-        list.innerHTML = "일정 없음";
-    }
-
     events.forEach(e=>{
-
         const div = document.createElement('div');
         div.className = "p-3 bg-gray-100 rounded-xl";
 
         div.innerHTML = `
             <b>${e.title}</b><br/>
-            <small>${e.time || ""}</small><br/>
-            <small>${e.memo || ""}</small><br/>
-
-            <button onclick='(${JSON.stringify(e)})' style="display:none"></button>
-
-            <button onclick="editEvent(${JSON.stringify(e).replaceAll('"','&quot;')})">
-                수정
-            </button>
-
-            <button onclick="deleteEvent('${e.id}')">
-                삭제
-            </button>
+            <small>${e.time || ""}</small>
         `;
+
+        div.onclick = () => openEventDetail(e);
 
         list.appendChild(div);
     });
@@ -739,6 +767,7 @@ window.openDayModal = function(dateStr){
     modal.style.display = "flex";
 };
 
-</script>    
+</script>
+
 </body>
 </html>
