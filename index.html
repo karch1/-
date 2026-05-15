@@ -50,11 +50,11 @@
         }
 
         .calendar-day {
-            background: #fff;
-            padding: 6px;
-            min-height: 100px;
-            cursor: pointer;
-        }
+    background: #fff;
+    padding: 6px;
+    min-height: 100px;
+    height: auto;
+}
 
         .day-label {
             text-align: center;
@@ -127,6 +127,13 @@
             opacity: 0;
             transition: 0.3s;
         }
+        @media (max-width: 768px){
+
+    .calendar-day{
+        min-height: 140px;
+    }
+
+}
 
     </style>
 </head>
