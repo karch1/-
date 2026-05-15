@@ -111,24 +111,10 @@
         }
 
         @media (max-width: 768px) {
-            .calendar-container {
-                padding: 0.5rem;
-            }
-
-            .calendar-day {
-                min-height: 70px;
-                padding: 4px;
-            }
-
-            .event-bar {
-                font-size: 10px;
-                padding: 2px 4px;
-            }
-
-            .day-label {
-                font-size: 12px;
-                padding: 6px;
-            }
+            .calendar-container { padding: 0.5rem; }
+            .calendar-day { min-height: 70px; padding: 4px; }
+            .event-bar { font-size: 10px; padding: 2px 4px; }
+            .day-label { font-size: 12px; padding: 6px; }
         }
     </style>
 </head>
@@ -150,56 +136,7 @@
 
 </div>
 
-<!-- DAY -->
-<div id="dayModal" class="modal-overlay" onclick="closeModal('dayModal')">
-    <div class="modal-content" onclick="event.stopPropagation()">
-
-        <h2 id="modalDateTitle">날짜</h2>
-        <div id="modalEventList"></div>
-
-        <hr style="margin:15px 0;">
-
-        <button onclick="openAddForm()" class="btn btn-blue" style="width:100%;">
-            + 일정 추가
-        </button>
-
-        <button onclick="closeModal('dayModal')" class="btn btn-gray" style="width:100%; margin-top:10px;">
-            닫기
-        </button>
-
-    </div>
-</div>
-
-<!-- EDIT -->
-<div id="editModal" class="modal-overlay" onclick="closeModal('editModal')">
-    <div class="modal-content" onclick="event.stopPropagation()">
-
-        <h2>📅 일정 작성</h2>
-
-        <input id="eventTitle" placeholder="제목"
-               style="width:100%;padding:10px;margin:5px 0;">
-
-        <input id="eventTime" type="time"
-               style="width:100%;padding:10px;margin:5px 0;">
-
-        <textarea id="eventInitialMemo" placeholder="메모"
-                  style="width:100%;padding:10px;margin:5px 0;"></textarea>
-
-        <input type="hidden" id="editId">
-
-        <button id="saveBtn" class="btn btn-blue" style="width:100%;">저장</button>
-
-        <button onclick="closeModal('editModal')" class="btn btn-gray" style="width:100%;margin-top:10px;">
-            닫기
-        </button>
-
-    </div>
-</div>
-
 <div id="toast">알림</div>
-
-</body>
-</html>
 
 <script type="module">
 
@@ -208,10 +145,7 @@ import {
     getFirestore,
     collection,
     addDoc,
-    getDocs,
-    deleteDoc,
-    updateDoc,
-    doc
+    getDocs
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 import {
@@ -237,25 +171,11 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-const ADMIN_EMAIL = "choae000@gmail.com";
-
 const state = {
     currentDate: new Date(),
     events: [],
     selectedDateStr: null,
-    currentUser: null,
-    editId: null,
-    selectedEvent: null
-};
-
-const filterState = {
-    users: {
-        "choae000@gmail.com": true,
-        "ssang9764@gmail.com": true,
-        "cksgml0@naver.com": true,
-        "ahn7770@gmail.com": true,
-        "huigi@email.com": true,
-    }
+    currentUser: null
 };
 
 const userColorMap = {
@@ -278,21 +198,13 @@ const SHIFT_PATTERN = [
 
 function getShiftLabel(dateStr){
     const target = new Date(dateStr);
-    const diff = Math.floor((target - SHIFT_START) / (1000*60*60*24));
+    const diff = Math.floor((target - SHIFT_START) / 86400000);
     if(diff < 0) return "";
     return SHIFT_PATTERN[diff % SHIFT_PATTERN.length];
 }
 
 const calendarEl = document.getElementById('calendar');
 const monthDisplay = document.getElementById('monthDisplay');
-
-function isOwner(e){
-    return state.currentUser?.email === e.userEmail;
-}
-
-function isAdmin(){
-    return state.currentUser?.email === ADMIN_EMAIL;
-}
 
 function showToast(msg){
     const t = document.getElementById('toast');
@@ -301,7 +213,7 @@ function showToast(msg){
     setTimeout(()=>t.style.opacity=0,2000);
 }
 
-/* ================= LOGIN ================= */
+/* LOGIN */
 window.loginGoogle = async () => {
     await signInWithPopup(auth, provider);
 };
@@ -310,75 +222,38 @@ window.logoutGoogle = async () => {
     await signOut(auth);
 };
 
-/* ================= AUTH ================= */
+/* AUTH */
 onAuthStateChanged(auth, (user)=>{
 
     const loginBtn = document.getElementById("loginBtn");
     const logoutBtn = document.getElementById("logoutBtn");
 
     if(user && userColorMap[user.email]){
-
-        const p = userColorMap[user.email];
-
-        state.currentUser = {
-            uid: user.uid,
-            email: user.email,
-            name: p.name,
-            color: p.color
-        };
-
+        state.currentUser = user;
         loginBtn.style.display = "none";
         logoutBtn.style.display = "inline-block";
-
         loadEvents();
-
     } else {
         state.currentUser = null;
         state.events = [];
-
         loginBtn.style.display = "inline-block";
         logoutBtn.style.display = "none";
-
         renderCalendar();
     }
 });
 
 async function loadEvents(){
     const snap = await getDocs(collection(db,"events"));
-
     state.events = [];
     snap.forEach(d=>{
         state.events.push({ id:d.id, ...d.data() });
     });
-
     renderCalendar();
 }
 
-/* ================= SAVE ================= */
-document.getElementById('saveBtn').onclick = async ()=>{
+/* SAVE */
+document.getElementById('calendar').onclick = async () => {};
 
-    const title = document.getElementById('eventTitle').value.trim();
-    const time = document.getElementById('eventTime').value;
-    const memo = document.getElementById('eventInitialMemo').value;
-
-    const data = {
-        date: state.selectedDateStr,
-        title,
-        time,
-        memo,
-        userColor: state.currentUser.color,
-        userUid: state.currentUser.uid,
-        userEmail: state.currentUser.email,
-        userName: state.currentUser.name
-    };
-
-    await addDoc(collection(db,"events"), data);
-
-    state.events.push(data);
-    renderCalendar();
-};
-
-/* ================= RENDER ================= */
 function renderCalendar(){
 
     calendarEl.innerHTML = '';
@@ -419,24 +294,13 @@ function renderCalendar(){
             </div>
         `;
 
-        const events = state.events.filter(e =>
-            e.date === dateStr &&
-            filterState.users[e.userEmail]
-        );
+        const events = state.events.filter(e => e.date === dateStr);
 
         events.forEach(e=>{
-
-            const canEdit = isAdmin() || isOwner(e);
-
             const bar = document.createElement('div');
             bar.className = "event-bar";
             bar.style.background = e.userColor;
             bar.innerText = e.title;
-
-            if(canEdit){
-                bar.onclick = () => alert("상세/수정 모달 연결 예정");
-            }
-
             div.appendChild(bar);
         });
 
