@@ -8,21 +8,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <title>나의 스마트 스케줄러</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        
-        :root {
-            --calendar-bg: #ffffff;
-            --day-hover: #f9fafb;
-            --sunday-text: #ef4444;
-            --saturday-text: #3b82f6;
-        }
 
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: #f3f4f6;
-            overscroll-behavior: none;
+            font-family: 'Inter', sans-serif;
+            background: #f3f4f6;
             margin: 0;
             padding: 0;
         }
@@ -30,69 +24,44 @@
         .calendar-container {
             max-width: 1200px;
             margin: 0 auto;
+            padding: 1rem;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 1rem;
         }
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(7, minmax(0, 1fr));
-            grid-auto-rows: minmax(100px, 1fr);
-            background-color: #e5e7eb;
+            grid-template-columns: repeat(7, 1fr);
             gap: 1px;
-            border: 1px solid #e5e7eb;
+            background: #e5e7eb;
             border-radius: 16px;
             overflow: hidden;
             flex-grow: 1;
         }
 
-        @media (min-width: 768px) {
-            .calendar-grid { grid-auto-rows: minmax(140px, 1fr); }
-        }
-
         .calendar-day {
-            background: var(--calendar-bg);
+            background: #fff;
             padding: 6px;
-            transition: background 0.2s;
+            min-height: 100px;
             cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            position: relative;
-            min-width: 0;
-            overflow: hidden;
-        }
-
-        .calendar-day:hover { background: var(--day-hover); }
-        .calendar-day.today { background: #fffbeb; }
-        .calendar-day.selected { outline: 3px solid #4f46e5; z-index: 10; }
-        
-        .day-num {
-            font-weight: 700;
-            font-size: clamp(0.7rem, 2vw, 0.9rem);
-            margin-bottom: 4px;
         }
 
         .day-label {
             text-align: center;
-            padding: 12px 0;
+            padding: 10px;
             font-weight: 800;
-            font-size: 0.75rem;
-            color: #6b7280;
             background: #fff;
         }
 
         .event-bar {
-            font-size: clamp(0.6rem, 1.5vw, 0.7rem);
+            font-size: 12px;
             padding: 3px 6px;
             border-radius: 6px;
-            color: white;
-            white-space: nowrap;
+            color: #fff;
+            margin-top: 2px;
             overflow: hidden;
-            text-overflow: ellipsis;
-            font-weight: 700;
+            white-space: nowrap;
         }
 
         .modal-overlay {
@@ -103,95 +72,40 @@
             justify-content: center;
             align-items: center;
             z-index: 100;
-            padding: 1rem;
-            backdrop-filter: blur(4px);
         }
 
         .modal-content {
-            background: white;
-            width: 100%;
+            background: #fff;
+            width: 95%;
             max-width: 500px;
-            border-radius: 24px;
+            border-radius: 16px;
+            padding: 20px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        @keyframes modalPop {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .comment-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 8px;
-            background: #f9fafb;
-            padding: 10px 14px;
-            border-radius: 12px;
-            border-left: 4px solid #e5e7eb;
-            margin-bottom: 8px;
-        }
-
-        .comment-text {
-            font-size: 0.85rem;
-            color: #4b5563;
-            font-weight: 500;
-            line-height: 1.4;
-            word-break: break-all;
-        }
-
-        .comment-delete {
-            color: #d1d5db;
-            font-size: 1.2rem;
+        .btn {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: bold;
             cursor: pointer;
-            padding: 0 4px;
         }
 
-        .comment-delete:hover {
-            color: #ef4444;
-        }
-
-        .btn-primary {
-            background: #4f46e5;
-            color: white;
-            padding: 1rem;
-            border-radius: 16px;
-            font-weight: 800;
-            width: 100%;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
-        }
-
-        .btn-primary:active {
-            transform: scale(0.98);
-            background: #4338ca;
-        }
+        .btn-blue { background: #4f46e5; color: white; }
+        .btn-red { background: #ef4444; color: white; }
+        .btn-gray { background: #6b7280; color: white; }
 
         #toast {
             position: fixed;
-            bottom: 2rem;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: #1f2937;
+            background: #111;
             color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 99px;
-            font-size: 0.875rem;
-            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 20px;
             opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            z-index: 200;
+            transition: 0.3s;
         }
     </style>
 </head>
@@ -199,198 +113,75 @@
 <body>
 
 <div class="calendar-container">
-    
-    <header class="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-6 px-2">
 
-    <h1 id="monthDisplay"
-        class="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
-        불러오는 중...
-    </h1>
+    <header class="flex justify-between items-center mb-4">
+        <h1 id="monthDisplay">로딩중...</h1>
 
-    <div class="flex flex-wrap gap-2 items-center">
+        <div>
+            <button onclick="loginGoogle()" class="btn btn-blue">로그인</button>
+            <button onclick="logoutGoogle()" class="btn btn-red">로그아웃</button>
+        </div>
+    </header>
 
-        <!-- 로그인 / 로그아웃 -->
-        <button onclick="loginGoogle()"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold shadow-sm">
-            로그인
-        </button>
+    <div id="calendar" class="calendar-grid"></div>
 
-        <button onclick="logoutGoogle()"
-                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold shadow-sm">
-            로그아웃
-        </button>
-
-        <!-- 월 이동 -->
-        <button id="prevMonth"
-                class="bg-white border border-gray-200 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-gray-50">
-            이전
-        </button>
-
-        <button id="nextMonth"
-                class="bg-white border border-gray-200 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-gray-50">
-            다음
-        </button>
-
-    </div>
-</header>
-
-    <div id="calendar" class="calendar-grid shadow-2xl"></div>
-
-    <footer class="mt-6 flex justify-center gap-4">
-        <button id="exportBtn"
-                class="text-xs font-bold text-gray-400 hover:text-indigo-500 transition-colors">
-            데이터 백업
-        </button>
-
-        <button id="importBtn"
-                class="text-xs font-bold text-gray-400 hover:text-indigo-500 transition-colors">
-            데이터 복구
-        </button>
-
-        <input type="file" id="importFile" class="hidden">
-    </footer>
 </div>
 
+<!-- DAY / DETAIL 통합 모달 -->
 <div id="dayModal" class="modal-overlay" onclick="closeModal('dayModal')">
-    <div class="modal-content p-7" onclick="event.stopPropagation()">
+    <div class="modal-content" onclick="event.stopPropagation()">
 
-        <div class="flex justify-between items-start mb-6">
-            <div>
-                <h2 id="modalDateTitle"
-                    class="text-2xl font-black text-gray-900">날짜</h2>
+        <h2 id="modalDateTitle">날짜</h2>
 
-                <p class="text-sm text-gray-400 font-bold">
-                    오늘의 일정
-                </p>
-            </div>
+        <div id="modalEventList"></div>
 
-            <button onclick="closeModal('dayModal')"
-                    class="text-gray-300 hover:text-gray-500 text-3xl font-light">
-                &times;
-            </button>
-        </div>
+        <hr style="margin:15px 0;">
 
-        <div id="modalEventList" class="space-y-4 mb-8"></div>
+        <button onclick="openAddForm()" class="btn btn-blue" style="width:100%;">
+            + 일정 추가
+        </button>
 
-        <button onclick="openAddForm()"
-                class="btn-primary flex items-center justify-center gap-2">
-            <span>+</span>
-            <span>새로운 일정 추가</span>
+        <button onclick="closeModal('dayModal')" class="btn btn-gray" style="width:100%; margin-top:10px;">
+            닫기
         </button>
 
     </div>
 </div>
 
+<!-- ADD / EDIT 모달 -->
 <div id="editModal" class="modal-overlay" onclick="closeModal('editModal')">
-    <div class="modal-content p-7" onclick="event.stopPropagation()">
+    <div class="modal-content" onclick="event.stopPropagation()">
 
-        <div class="flex justify-between items-center mb-6">
-            <h2 id="formTitle"
-                class="text-xl font-black text-indigo-600">
-                📅 일정 작성
-            </h2>
+        <h2>📅 일정 작성</h2>
 
-            <button onclick="closeModal('editModal')"
-                    class="text-gray-300 hover:text-gray-500 text-3xl font-light">
-                &times;
-            </button>
-        </div>
+        <input id="eventTitle" placeholder="제목"
+               style="width:100%;padding:10px;margin:5px 0;">
 
-        <div class="space-y-5">
+        <input id="eventTime" type="time"
+               style="width:100%;padding:10px;margin:5px 0;">
 
-            <div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">
-                    일정 제목
-                </label>
+        <textarea id="eventInitialMemo" placeholder="메모"
+                  style="width:100%;padding:10px;margin:5px 0;"></textarea>
 
-                <input type="text"
-                       id="eventTitle"
-                       placeholder="일정 이름을 입력하세요"
-                       class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-indigo-500 outline-none font-bold">
-            </div>
+        <!-- hidden -->
+        <input type="hidden" id="editId">
 
-            <div class="grid grid-cols-2 gap-4">
+        <button id="saveBtn" class="btn btn-blue" style="width:100%;">
+            저장
+        </button>
 
-                <div>
-                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">
-                        시간
-                    </label>
+        <button onclick="closeModal('editModal')" class="btn btn-gray" style="width:100%;margin-top:10px;">
+            닫기
+        </button>
 
-                    <input type="time"
-                           id="eventTime"
-                           class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl outline-none font-bold">
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">
-                        색상
-                    </label>
-
-                    <select id="eventColor"
-                            class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl outline-none font-bold">
-                        <option value="#6366f1">보라 (업무)</option>
-                        <option value="#ef4444">빨강 (중요)</option>
-                        <option value="#10b981">초록 (운동)</option>
-                        <option value="#f59e0b">노랑 (약속)</option>
-                        <option value="#ec4899">핑크 (생일)</option>
-                    </select>
-                </div>
-
-            </div>
-
-            <div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">
-                    상세 메모
-                </label>
-
-                <textarea id="eventInitialMemo"
-                          rows="3"
-                          placeholder="메모를 함께 입력하세요 (선택)"
-                          class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-indigo-500 outline-none font-bold text-sm"></textarea>
-            </div>
-
-            <input type="hidden" id="editId">
-
-            <button id="saveBtn" class="btn-primary">
-                일정 저장하기
-            </button>
-
-        </div>
     </div>
 </div>
 
-<div id="commentModal" class="modal-overlay" onclick="closeModal('commentModal')">
-    <div class="modal-content p-7" onclick="event.stopPropagation()">
+<!-- TOAST -->
+<div id="toast">알림</div>
 
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-black text-indigo-600">
-                📝 메모 추가
-            </h2>
-
-            <button onclick="closeModal('commentModal')"
-                    class="text-gray-300 hover:text-gray-500 text-3xl font-light">
-                &times;
-            </button>
-        </div>
-
-        <div class="space-y-5">
-
-            <textarea id="commentInput"
-                      rows="4"
-                      class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-indigo-500 outline-none font-bold text-sm"
-                      placeholder="메모 내용을 입력하세요..."></textarea>
-
-            <input type="hidden" id="commentTargetId">
-
-            <button id="saveCommentBtn" class="btn-primary">
-                메모 저장
-            </button>
-
-        </div>
-    </div>
-</div>
-
-<div id="toast">메시지가 표시됩니다.</div>
+</body>
+</html>
 
 <script type="module">
 
@@ -441,11 +232,11 @@ const state = {
     currentUser: null,
     editId: null,
     selectedEvent: null,
-    filterMine: false
+    viewMode: "list" // list | detail
 };
 
 /* =========================
-   USER COLOR MAP
+   USER MAP
 ========================= */
 const userColorMap = {
     "choae000@gmail.com": { name: "갈치", color: "#6366f1" },
@@ -473,12 +264,8 @@ function showToast(msg){
    LOGIN
 ========================= */
 window.loginGoogle = async () => {
-    try {
-        await signInWithPopup(auth, provider);
-        showToast("로그인 완료");
-    } catch (e) {
-        showToast("로그인 실패");
-    }
+    await signInWithPopup(auth, provider);
+    showToast("로그인 완료");
 };
 
 window.logoutGoogle = async () => {
@@ -512,7 +299,21 @@ onAuthStateChanged(auth, (user)=>{
 });
 
 /* =========================
-   OPEN ADD FORM
+   LOAD
+========================= */
+async function loadEvents(){
+    const snap = await getDocs(collection(db,"events"));
+
+    state.events = [];
+    snap.forEach(d=>{
+        state.events.push({ id:d.id, ...d.data() });
+    });
+
+    renderCalendar();
+}
+
+/* =========================
+   OPEN ADD
 ========================= */
 window.openAddForm = function(){
 
@@ -528,7 +329,7 @@ window.openAddForm = function(){
 };
 
 /* =========================
-   EDIT EVENT (모달에서만 수정)
+   EDIT OPEN
 ========================= */
 window.editEvent = function(e){
 
@@ -542,7 +343,7 @@ window.editEvent = function(e){
 };
 
 /* =========================
-   DELETE EVENT
+   DELETE
 ========================= */
 window.deleteEvent = async function(id){
 
@@ -555,39 +356,22 @@ window.deleteEvent = async function(id){
 };
 
 /* =========================
-   CLOSE MODAL
+   CLOSE
 ========================= */
 window.closeModal = function(id){
     document.getElementById(id).style.display = "none";
 };
 
 /* =========================
-   LOAD EVENTS
-========================= */
-async function loadEvents(){
-
-    const snap = await getDocs(collection(db,"events"));
-
-    state.events = [];
-
-    snap.forEach(d=>{
-        state.events.push({ id:d.id, ...d.data() });
-    });
-
-    renderCalendar();
-}
-
-/* =========================
    SAVE (ADD / UPDATE)
 ========================= */
 document.getElementById('saveBtn').onclick = async ()=>{
-
-    if(!state.selectedDateStr) return showToast("날짜 선택");
 
     const title = document.getElementById('eventTitle').value.trim();
     const time = document.getElementById('eventTime').value;
     const memo = document.getElementById('eventInitialMemo').value;
 
+    if(!state.selectedDateStr) return showToast("날짜 선택");
     if(!title) return showToast("제목 입력");
 
     const data = {
@@ -624,18 +408,7 @@ document.getElementById('saveBtn').onclick = async ()=>{
 };
 
 /* =========================
-   FILTER (내 일정)
-========================= */
-window.toggleMine = function(){
-
-    state.filterMine = !state.filterMine;
-    renderCalendar();
-
-    showToast(state.filterMine ? "내 일정만 보기" : "전체 보기");
-};
-
-/* =========================
-   CALENDAR RENDER
+   CALENDAR
 ========================= */
 function renderCalendar(){
 
@@ -668,14 +441,9 @@ function renderCalendar(){
 
         const div = document.createElement('div');
         div.className = "calendar-day";
-
         div.innerHTML = `<span class="day-num">${d}</span>`;
 
-        let events = state.events.filter(e=>e.date === dateStr);
-
-        if(state.filterMine){
-            events = events.filter(e=>e.userUid === state.currentUser.uid);
-        }
+        const events = state.events.filter(e=>e.date === dateStr);
 
         events.forEach(e=>{
             const bar = document.createElement('div');
@@ -683,8 +451,7 @@ function renderCalendar(){
             bar.style.background = e.userColor;
             bar.innerText = e.title;
 
-            // ❌ 바로 수정 안 감
-            bar.onclick = (ev) => {
+            bar.onclick = (ev)=>{
                 ev.stopPropagation();
                 openEventDetail(e);
             };
@@ -699,46 +466,12 @@ function renderCalendar(){
 }
 
 /* =========================
-   EVENT DETAIL (핵심)
-========================= */
-window.openEventDetail = function(e){
-
-    state.selectedEvent = e;
-
-    const modal = document.getElementById('dayModal');
-    const list = document.getElementById('modalEventList');
-
-    list.innerHTML = `
-        <div class="p-3 bg-white rounded-xl border">
-            <b>${e.title}</b><br/>
-            <small>${e.time || ""}</small><br/>
-            <small>${e.memo || ""}</small>
-
-            <div style="margin-top:10px;display:flex;gap:6px;">
-                <button onclick='editEvent(${JSON.stringify(e).replaceAll('"','&quot;')})'>
-                    수정
-                </button>
-
-                <button onclick="deleteEvent('${e.id}')">
-                    삭제
-                </button>
-
-                <button onclick="openDayModal('${e.date}')">
-                    목록
-                </button>
-            </div>
-        </div>
-    `;
-
-    modal.style.display = "flex";
-};
-
-/* =========================
    DAY MODAL (목록)
 ========================= */
 window.openDayModal = function(dateStr){
 
     state.selectedDateStr = dateStr;
+    state.viewMode = "list";
 
     const modal = document.getElementById('dayModal');
     const list = document.getElementById('modalEventList');
@@ -752,17 +485,57 @@ window.openDayModal = function(dateStr){
 
     events.forEach(e=>{
         const div = document.createElement('div');
-        div.className = "p-3 bg-gray-100 rounded-xl";
+        div.className = "p-3 bg-gray-100 rounded-xl cursor-pointer";
 
         div.innerHTML = `
             <b>${e.title}</b><br/>
             <small>${e.time || ""}</small>
         `;
 
-        div.onclick = () => openEventDetail(e);
+        div.onclick = ()=>openEventDetail(e);
 
         list.appendChild(div);
     });
+
+    modal.style.display = "flex";
+};
+
+/* =========================
+   DETAIL MODAL
+========================= */
+window.openEventDetail = function(e){
+
+    state.selectedEvent = e;
+    state.viewMode = "detail";
+
+    const modal = document.getElementById('dayModal');
+    const list = document.getElementById('modalEventList');
+
+    list.innerHTML = `
+        <div class="p-4 bg-white rounded-xl border shadow">
+
+            <div class="font-bold text-lg">${e.title}</div>
+            <div class="text-sm text-gray-500">${e.time || ""}</div>
+            <div class="mt-2 text-sm">${e.memo || ""}</div>
+
+            <div style="margin-top:12px;display:flex;gap:6px;">
+                <button onclick='editEvent(${JSON.stringify(e).replaceAll('"','&quot;')})'
+                        class="px-3 py-1 bg-indigo-500 text-white rounded">
+                    수정
+                </button>
+
+                <button onclick="deleteEvent('${e.id}')"
+                        class="px-3 py-1 bg-red-500 text-white rounded">
+                    삭제
+                </button>
+
+                <button onclick="openDayModal('${e.date}')"
+                        class="px-3 py-1 bg-gray-400 text-white rounded">
+                    목록
+                </button>
+            </div>
+        </div>
+    `;
 
     modal.style.display = "flex";
 };
