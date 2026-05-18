@@ -6,8 +6,6 @@ self.addEventListener("activate",(event)=>{
     console.log("Service Worker Activated");
 });
 
-self.addEventListener("fetch",(event)=>{
-});
 
 /* =========================
    FCM BACKGROUND PUSH
@@ -39,11 +37,18 @@ messaging.onBackgroundMessage((payload) => {
 
     console.log("백그라운드 알림", payload);
 
-    self.registration.showNotification(
-        payload.notification.title,
-        {
-            body: payload.notification.body,
-            icon: "./icon-192.png"
-        }
-    );
+    const title =
+        payload.notification?.title ||
+        payload.data?.title ||
+        "알림";
+
+    const body =
+        payload.notification?.body ||
+        payload.data?.body ||
+        "";
+
+    self.registration.showNotification(title, {
+        body,
+        icon: "./icon-192.png"
+    });
 });
