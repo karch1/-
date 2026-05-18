@@ -411,19 +411,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-/* 내 메시지 */
-.chat-mine {
-    background: #4f46e5;
-    color: white;
-    border-top-right-radius: 4px;
-}
 
-/* 상대 메시지 */
-.chat-other {
-    background: #fff;
-    color: #111;
-    border-top-left-radius: 4px;
-}
 
     .chat-item {
     display: flex;
@@ -1557,20 +1545,24 @@ function listenChat(){
 
             const div = document.createElement("div");
 
-            div.className = `chat-item ${isMine ? "chat-right" : "chat-left"}`;
+div.className = `chat-item ${isMine ? "chat-right" : "chat-left"}`;
 
-            div.innerHTML = `
-                <div class="chat-box">
-                    <div class="chat-meta">
-                        <span>${m.userName}</span>
-                        <span class="chat-time">${time}</span>
-                    </div>
+div.innerHTML = `
+    <div class="chat-box">
+        <div class="chat-meta">
+            <span>${m.userName}</span>
+            <span class="chat-time">${time}</span>
+        </div>
 
-                    <div class="chat-bubble ${isMine ? "chat-mine" : "chat-other"}">
-                        ${m.text}
-                    </div>
-                </div>
-            `;
+        <div class="chat-bubble"
+             style="
+                background:${m.userColor};
+                color:white;
+             ">
+            ${m.text}
+        </div>
+    </div>
+`;
 
             chatMessages.appendChild(div);
         });
