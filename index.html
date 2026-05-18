@@ -691,6 +691,13 @@
     }
     from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
+    import {
+    getMessaging,
+    getToken,
+    onMessage
+}
+from "https://www.gstatic.com/firebasejs/12.13.0/firebase-messaging.js";
+
     /* =========================
        FIREBASE INIT
     ========================= */
@@ -719,6 +726,8 @@
     const auth = getAuth(app);
 
     const provider = new GoogleAuthProvider();
+
+    const messaging = getMessaging(app);
 
     /* =========================
        STATE
@@ -1519,15 +1528,60 @@ if("serviceWorker" in navigator){
 
     navigator.serviceWorker
         .register("./service-worker.js")
-        .then(()=>{
+
+        .then(async(reg)=>{
 
             console.log("SW REGISTER SUCCESS");
+
+            /* 알림 권한 */
+
+            const permission =
+                await Notification.requestPermission();
+
+            if(permission === "granted"){
+
+                console.log("알림 허용");
+
+                const token =
+                    await getToken(messaging,{
+
+                        vapidKey:
+"BCeAQRVjha5xrFLqCwMPLowkMd7cYsjpBU-s9nQmVftHf3QScivat1NtNvLpJMUEmxUJfALTBfa7XAU3KKVwBiM",
+
+                        serviceWorkerRegistration: reg
+                    });
+
+                console.log("FCM TOKEN");
+
+                console.log(token);
+
+            } else {
+
+                console.log("알림 거부");
+            }
         })
+
         .catch((err)=>{
 
             console.log("SW FAIL", err);
         });
 }
+
+    /* =========================
+   FOREGROUND NOTIFICATION
+========================= */
+
+onMessage(messaging,(payload)=>{
+
+    console.log(
+        "포그라운드 알림",
+        payload
+    );
+
+    showToast(
+        payload.notification.title
+    );
+});
     
 
     </script>
